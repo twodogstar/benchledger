@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Tools
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# BenchLedger data and secrets: never commit these
+benchledger-data/
+*.db
+*.db-wal
+*.db-shm
+.env
+config.toml
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store

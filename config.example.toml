@@ -1,0 +1,7 @@
+# BenchLedger settings. Copy to ~/.config/benchledger/config.toml and edit.
+# Every line is optional; these are the defaults.
+# Environment variables (BENCHLEDGER_DATA_DIR, BENCHLEDGER_HOST, BENCHLEDGER_PORT) override this file.
+
+data_dir = "~/benchledger-data"   # database and raw files; keep it outside the git repo
+host = "127.0.0.1"                # this machine only; anything else exposes the app to your network
+port = 8765

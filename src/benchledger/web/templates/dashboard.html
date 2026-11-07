@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}Dashboard · BenchLedger{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div>
+    <div class="eyebrow">BenchLedger / dashboard</div>
+    <h1>The bench, on record.</h1>
+    <p class="sub">Iteration 0: the app runs, the database exists, and the tests pass. Features start in iteration 1.</p>
+  </div>
+</header>
+
+<section class="grid stats">
+  <div class="stat">
+    <span class="label">Version</span>
+    <span class="n">{{ version }}</span>
+  </div>
+  <div class="stat">
+    <span class="label">Schema revision</span>
+    <span class="n">{{ revision or "none" }}</span>
+    {% if not revision %}<span class="hint warn">Run: benchledger db upgrade</span>{% endif %}
+  </div>
+  <div class="stat wide">
+    <span class="label">Data folder</span>
+    <span class="path">{{ data_dir }}</span>
+    <span class="hint">Database and raw files live here, outside the git repo.</span>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Next up: iteration 1</h2>
+  <ul class="plain">
+    <li>Projects with goal, state, setup, wiring and parts (M1)</li>
+    <li>Dated notebook entries with full edit history (M2)</li>
+    <li>Next-step tasks (M5)</li>
+  </ul>
+</section>
+{% endblock %}
