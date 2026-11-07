@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from benchledger.app import create_app
 from benchledger.config import Settings
 from benchledger.db.migrate import upgrade
+from benchledger.db.session import make_engine, make_session_factory
 
 
 @pytest.fixture
@@ -17,6 +18,15 @@ def settings(tmp_path) -> Settings:
 def migrated(settings) -> Settings:
     upgrade(settings)
     return settings
+
+
+@pytest.fixture
+def session(migrated):
+    """A database session on a freshly migrated database, for testing services directly."""
+    engine = make_engine(migrated.database_url)
+    with make_session_factory(engine)() as db_session:
+        yield db_session
+    engine.dispose()
 
 
 @pytest.fixture

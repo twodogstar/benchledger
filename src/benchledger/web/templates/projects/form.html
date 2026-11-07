@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit " ~ project.name if project else "New project" }} · BenchLedger{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div>
+    <div class="eyebrow">BenchLedger / projects</div>
+    <h1>{{ "Edit " ~ project.name if project else "New project" }}</h1>
+  </div>
+</header>
+
+<form class="panel form" method="post"
+      action="{{ '/projects/' ~ project.slug ~ '/edit' if project else '/projects/new' }}">
+  {% if errors %}<p class="error-summary">Please fix the highlighted fields.</p>{% endif %}
+
+  <div class="row">
+    <label class="field grow">
+      <span>Name</span>
+      <input name="name" value="{{ values.get('name', '') }}" maxlength="100" required autofocus>
+      {% if errors.get('name') %}<em class="error">{{ errors.get('name') }}</em>{% endif %}
+    </label>
+    <label class="field">
+      <span>Area</span>
+      <select name="area_id">
+        <option value="">— none —</option>
+        {% for a in areas %}
+        <option value="{{ a.id }}" {% if values.get('area_id') == a.id | string %}selected{% endif %}>
+          {{ a.name }}{% if a.archived_at %} (retired){% endif %}</option>
+        {% endfor %}
+      </select>
+      {% if errors.get('area_id') %}<em class="error">{{ errors.get('area_id') }}</em>{% endif %}
+    </label>
+  </div>
+
+  <div class="row">
+    <label class="field">
+      <span>Stage</span>
+      <select name="stage">
+        {% for s in stages %}
+        <option {% if values.get('stage') == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.get('stage') %}<em class="error">{{ errors.get('stage') }}</em>{% endif %}
+    </label>
+    <label class="field">
+      <span>Priority</span>
+      <select name="priority">
+        {% for p in priorities %}
+        <option {% if values.get('priority') == p %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.get('priority') %}<em class="error">{{ errors.get('priority') }}</em>{% endif %}
+    </label>
+  </div>
+
+  {% for field, label, hint in [
+    ("goal", "Goal", "What this project is trying to achieve."),
+    ("current_state", "Current state", "Where it stands right now."),
+    ("setup", "Setup", "Bench setup, configuration, software versions."),
+    ("wiring", "Wiring", "Connections, cables, terminals, grounding."),
+    ("parts", "Parts", "Parts, boards and materials involved."),
+  ] %}
+  <label class="field">
+    <span>{{ label }} <small class="muted">{{ hint }}</small></span>
+    <textarea name="{{ field }}" rows="3">{{ values.get(field, '') }}</textarea>
+  </label>
+  {% endfor %}
+
+  <div class="actions">
+    <button class="btn primary" type="submit">{{ "Save changes" if project else "Create project" }}</button>
+    <a class="btn" href="{{ '/projects/' ~ project.slug if project else '/projects' }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

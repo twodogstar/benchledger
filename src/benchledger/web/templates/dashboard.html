@@ -1,14 +1,28 @@
 {% extends "base.html" %}
-{% set active = "dashboard" %}
 {% block title %}Dashboard · BenchLedger{% endblock %}
 {% block content %}
 <header class="topbar">
   <div>
     <div class="eyebrow">BenchLedger / dashboard</div>
     <h1>The bench, on record.</h1>
-    <p class="sub">Iteration 0: the app runs, the database exists, and the tests pass. Features start in iteration 1.</p>
+    <p class="sub">What's active right now. Tasks and recent entries join this page later in iteration 1.</p>
   </div>
+  <div class="actions"><a class="btn primary" href="/projects/new">+ New project</a></div>
 </header>
+
+<section class="panel">
+  <h2>Active projects</h2>
+  {% if active_projects %}
+  <ul class="plain">
+    {% for p in active_projects %}
+    <li><a href="/projects/{{ p.slug }}">{{ p.name }}</a>
+      {% if p.area %}<span class="muted"> · {{ p.area.name }}</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">No active projects. Set a project's stage to Active to see it here.</p>
+  {% endif %}
+</section>
 
 <section class="grid stats">
   <div class="stat">
@@ -25,14 +39,5 @@
     <span class="path">{{ data_dir }}</span>
     <span class="hint">Database and raw files live here, outside the git repo.</span>
   </div>
-</section>
-
-<section class="panel">
-  <h2>Next up: iteration 1</h2>
-  <ul class="plain">
-    <li>Projects with goal, state, setup, wiring and parts (M1)</li>
-    <li>Dated notebook entries with full edit history (M2)</li>
-    <li>Next-step tasks (M5)</li>
-  </ul>
 </section>
 {% endblock %}

@@ -5,6 +5,9 @@ from __future__ import annotations
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
+from benchledger.db import audit  # noqa: F401  (importing registers the change-log hook)
+from benchledger.db.models import OWNER_ID
+
 
 def make_engine(database_url: str, *, foreign_keys: bool = True) -> Engine:
     """Create an engine with the SQLite settings BenchLedger relies on.
@@ -32,4 +35,5 @@ def make_engine(database_url: str, *, foreign_keys: bool = True) -> Engine:
 
 
 def make_session_factory(engine: Engine) -> sessionmaker[Session]:
-    return sessionmaker(bind=engine, expire_on_commit=False)
+    # info["author_id"] is who the change log credits; always the owner until logins (C1).
+    return sessionmaker(bind=engine, expire_on_commit=False, info={"author_id": OWNER_ID})

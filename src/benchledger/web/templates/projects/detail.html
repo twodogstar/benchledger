@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} · BenchLedger{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div>
+    <div class="eyebrow">BenchLedger / projects</div>
+    <h1>{{ project.name }}</h1>
+    <div class="card-top">
+      <span class="badge stage-{{ project.stage | lower }}">{{ project.stage }}</span>
+      <span class="badge">{{ project.priority }} priority</span>
+      {% if project.area %}<span class="badge">{{ project.area.name }}</span>{% endif %}
+      {% if project.archived_at %}<span class="badge muted">Archived</span>{% endif %}
+    </div>
+  </div>
+  <div class="actions">
+    <a class="btn" href="/history/projects/{{ project.id }}">History</a>
+    <a class="btn primary" href="/projects/{{ project.slug }}/edit">Edit</a>
+  </div>
+</header>
+
+{% if project.archived_at %}
+<p class="notice">This project is archived. It's hidden from lists, but nothing has been deleted.</p>
+{% endif %}
+
+<section class="grid two">
+  {% for field, label in [
+    ("goal", "Goal"),
+    ("current_state", "Current state"),
+    ("setup", "Setup"),
+    ("wiring", "Wiring"),
+    ("parts", "Parts"),
+  ] %}
+  <div class="panel">
+    <h2>{{ label }}</h2>
+    {% set text = project[field] %}
+    {% if text %}<p class="prose">{{ text }}</p>{% else %}<p class="muted">Not written yet.</p>{% endif %}
+  </div>
+  {% endfor %}
+  <div class="panel muted-panel">
+    <h2>Notebook and tasks</h2>
+    <p class="muted">Dated entries and next-step tasks arrive in the next two pull requests.</p>
+  </div>
+</section>
+
+<form class="danger-zone" method="post"
+      action="/projects/{{ project.slug }}/{{ 'restore' if project.archived_at else 'archive' }}">
+  <button class="btn" type="submit">{{ "Restore project" if project.archived_at else "Archive project" }}</button>
+  <span class="muted">Archiving hides the project from lists. Its history is always kept.</span>
+</form>
+{% endblock %}

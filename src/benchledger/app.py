@@ -4,33 +4,33 @@
 while `benchledger serve` builds one from the normal settings.
 """
 
-from pathlib import Path
-
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 
 from benchledger import __version__
 from benchledger.config import Settings, load_settings
 from benchledger.db.migrate import current_revision
 from benchledger.db.session import make_engine, make_session_factory
+from benchledger.services import projects as project_service
+from benchledger.web.deps import WEB_DIR, SessionDep, templates
+from benchledger.web.routes import history, projects, settings
 
-WEB_DIR = Path(__file__).resolve().parent / "web"
-templates = Jinja2Templates(directory=WEB_DIR / "templates")
 
-
-def create_app(settings: Settings | None = None) -> FastAPI:
-    settings = settings or load_settings()
-    engine = make_engine(settings.database_url)
+def create_app(app_settings: Settings | None = None) -> FastAPI:
+    app_settings = app_settings or load_settings()
+    engine = make_engine(app_settings.database_url)
 
     app = FastAPI(title="BenchLedger", version=__version__)
-    app.state.settings = settings
+    app.state.settings = app_settings
     app.state.engine = engine
     app.state.session_factory = make_session_factory(engine)
 
     app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
+    app.include_router(projects.router)
+    app.include_router(settings.router)
+    app.include_router(history.router)
 
     def schema_revision() -> str | None:
         try:
@@ -39,14 +39,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return None
 
     @app.get("/", response_class=HTMLResponse)
-    def dashboard(request: Request):
+    def dashboard(request: Request, session: SessionDep):
+        revision = schema_revision()
+        active = []
+        if revision is not None:
+            active = project_service.list_projects(session, stage="Active")
         return templates.TemplateResponse(
             request,
             "dashboard.html",
             {
-                "version": __version__,
-                "data_dir": settings.data_dir,
-                "revision": schema_revision(),
+                "active": "dashboard",
+                "data_dir": app_settings.data_dir,
+                "revision": revision,
+                "active_projects": active,
             },
         )
 

@@ -11,7 +11,7 @@ def test_upgrade_creates_tables(migrated):
     engine = make_engine(migrated.database_url)
     tables = set(inspect(engine).get_table_names())
     assert {"users", "change_log", "alembic_version"} <= tables
-    assert current_revision(engine) == "0001"
+    assert current_revision(engine) == "0002"
     engine.dispose()
 
 

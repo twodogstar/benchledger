@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Projects · BenchLedger{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div>
+    <div class="eyebrow">BenchLedger / projects</div>
+    <h1>Projects</h1>
+  </div>
+  <div class="actions"><a class="btn primary" href="/projects/new">+ New project</a></div>
+</header>
+
+<nav class="filters" aria-label="Filter by stage">
+  <a href="/projects" class="chip {% if not stage and not archived %}on{% endif %}">All</a>
+  {% for s in stages %}
+  <a href="/projects?stage={{ s }}" class="chip {% if stage == s %}on{% endif %}">{{ s }}</a>
+  {% endfor %}
+  <a href="/projects?archived=1" class="chip {% if archived %}on{% endif %}">Include archived</a>
+</nav>
+
+{% if projects %}
+<section class="cards">
+  {% for p in projects %}
+  <a class="card" href="/projects/{{ p.slug }}">
+    <div class="card-top">
+      <span class="badge stage-{{ p.stage | lower }}">{{ p.stage }}</span>
+      <span class="badge">{{ p.priority }}</span>
+      {% if p.archived_at %}<span class="badge muted">Archived</span>{% endif %}
+    </div>
+    <h3>{{ p.name }}</h3>
+    {% if p.area %}<div class="muted">{{ p.area.name }}</div>{% endif %}
+    {% if p.goal %}<p class="clip">{{ p.goal }}</p>{% endif %}
+  </a>
+  {% endfor %}
+</section>
+{% else %}
+<section class="panel empty">
+  {% if stage %}
+  <p>No projects at the {{ stage }} stage.</p>
+  {% else %}
+  <p>No projects yet.</p>
+  <a class="btn primary" href="/projects/new">Create your first project</a>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
