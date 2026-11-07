@@ -28,4 +28,4 @@ def test_db_upgrade_then_current(tmp_path, monkeypatch):
 
     result = runner.invoke(app, ["db", "current"])
     assert result.exit_code == 0
-    assert "0001" in result.output
+    assert "0002" in result.output

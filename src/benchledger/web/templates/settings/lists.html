@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Lists · Settings · BenchLedger{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div>
+    <div class="eyebrow">BenchLedger / settings</div>
+    <h1>Lists</h1>
+    <p class="sub">The choices offered in forms. Retiring an item hides it from new choices but keeps it on records that already use it.</p>
+  </div>
+</header>
+
+<section class="panel">
+  <h2>Project areas</h2>
+  <div class="table-wrap">
+  <table class="list-table">
+    <tbody>
+    {% for a in areas %}
+      <tr class="{{ 'retired' if a.archived_at }}">
+        <td class="grow">
+          <form class="inline" method="post" action="/settings/areas/{{ a.id }}/rename">
+            <input name="name" value="{{ a.name }}" maxlength="60" aria-label="Name for {{ a.name }}">
+            <button class="btn small" type="submit">Rename</button>
+          </form>
+          {% if errors.get(a.id) %}<em class="error">{{ errors.get(a.id) }}</em>{% endif %}
+        </td>
+        {% if a.archived_at %}
+        <td class="muted">Retired</td>
+        <td></td>
+        <td>
+          <form method="post" action="/settings/areas/{{ a.id }}/restore">
+            <button class="btn small" type="submit">Restore</button>
+          </form>
+        </td>
+        {% else %}
+        <td class="nowrap">
+          <form class="inline" method="post" action="/settings/areas/{{ a.id }}/move">
+            <button class="btn small" name="direction" value="up" title="Move up" aria-label="Move {{ a.name }} up">↑</button>
+            <button class="btn small" name="direction" value="down" title="Move down" aria-label="Move {{ a.name }} down">↓</button>
+          </form>
+        </td>
+        <td><a class="muted small-link" href="/history/areas/{{ a.id }}">History</a></td>
+        <td>
+          <form method="post" action="/settings/areas/{{ a.id }}/archive">
+            <button class="btn small" type="submit">Retire</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <form class="inline add-row" method="post" action="/settings/areas">
+    <input name="name" placeholder="New area name" maxlength="60" value="{{ values.get('name', '') }}" aria-label="New area name">
+    <button class="btn primary small" type="submit">Add area</button>
+  </form>
+  {% if errors.get("new") %}<em class="error">{{ errors.get("new") }}</em>{% endif %}
+</section>
+{% endblock %}

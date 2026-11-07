@@ -16,13 +16,13 @@
       </div>
       <nav class="nav" aria-label="Main">
         <a href="/" class="{% if active == 'dashboard' %}active{% endif %}">Dashboard</a>
+        <a href="/projects" class="{% if active == 'projects' %}active{% endif %}">Projects</a>
         {# Pages below arrive in later iterations; shown disabled so the layout is final. #}
-        <span class="soon" title="Iteration 1">Projects</span>
         <span class="soon" title="Iteration 2">Runs</span>
         <span class="soon" title="Iteration 5">Instruments</span>
         <span class="soon" title="Iteration 6">Templates</span>
         <span class="soon" title="Iteration 6">Reports</span>
-        <span class="soon" title="Iteration 3">Settings &amp; backups</span>
+        <a href="/settings/lists" class="{% if active == 'settings' %}active{% endif %}">Settings</a>
       </nav>
       <div class="side-bottom">
         <span class="signal"></span> v{{ version }} · local only

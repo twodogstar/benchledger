@@ -8,13 +8,13 @@ def test_dashboard_renders(client):
     response = client.get("/")
     assert response.status_code == 200
     assert "BENCH<em>LEDGER</em>" in response.text
-    assert "0001" in response.text  # schema revision shown
+    assert "0002" in response.text  # schema revision shown
 
 
 def test_healthz_reports_ok(client):
     response = client.get("/healthz")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": __version__, "schema_revision": "0001"}
+    assert response.json() == {"status": "ok", "version": __version__, "schema_revision": "0002"}
 
 
 def test_healthz_reports_unmigrated_database(settings):
