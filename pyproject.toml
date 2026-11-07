@@ -1,0 +1,50 @@
+[project]
+name = "benchledger"
+dynamic = ["version"]
+description = "Electronic lab notebook for a home electronics and metrology bench"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "twodogstar" }]
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "jinja2>=3.1",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "typer>=0.12",
+]
+
+[project.scripts]
+benchledger = "benchledger.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/benchledger/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/benchledger"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/W: style, F: real errors, I: import order, B: likely bugs, UP: modern syntax, SIM: simpler code
+select = ["E", "W", "F", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

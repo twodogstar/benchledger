@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a1117">
+  <title>{% block title %}BenchLedger{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/benchledger.css') }}">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <b>BENCH<em>LEDGER</em></b>
+        <small>RECORD WHAT HAPPENED</small>
+      </div>
+      <nav class="nav" aria-label="Main">
+        <a href="/" class="{% if active == 'dashboard' %}active{% endif %}">Dashboard</a>
+        {# Pages below arrive in later iterations; shown disabled so the layout is final. #}
+        <span class="soon" title="Iteration 1">Projects</span>
+        <span class="soon" title="Iteration 2">Runs</span>
+        <span class="soon" title="Iteration 5">Instruments</span>
+        <span class="soon" title="Iteration 6">Templates</span>
+        <span class="soon" title="Iteration 6">Reports</span>
+        <span class="soon" title="Iteration 3">Settings &amp; backups</span>
+      </nav>
+      <div class="side-bottom">
+        <span class="signal"></span> v{{ version }} · local only
+      </div>
+    </aside>
+    <main class="main">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>
