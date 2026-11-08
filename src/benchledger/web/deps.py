@@ -10,10 +10,13 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from benchledger import __version__
+from benchledger.web.markdown import render_markdown
 
 WEB_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=WEB_DIR / "templates")
 templates.env.globals["version"] = __version__  # shown in the sidebar on every page
+# {{ entry.body | markdown }}: rendered and cleaned (N9). Never use |safe on user text.
+templates.env.filters["markdown"] = render_markdown
 
 
 def get_session(request: Request) -> Iterator[Session]:

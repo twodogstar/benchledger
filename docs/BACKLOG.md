@@ -41,7 +41,7 @@ Branch: `feat/iter1-notebook` from `main`.
 - [x] **1.2 Entry service.** Create, edit, soft-delete, restore, and a timeline per project
   (newest first, filter by kind). Hypotheses default to `Untested`, questions to `Open`.
   Accept: unit tests for each operation, including "edit keeps the old text in history".
-- [ ] **1.3 Safe Markdown.** Render entry bodies with markdown-it-py, cleaned with nh3.
+- [x] **1.3 Safe Markdown.** Render entry bodies with markdown-it-py, cleaned with nh3.
   Accept: tests show `<script>`, `onerror=` and `javascript:` links are stripped (N9).
 - [ ] **1.4 Notebook on the project page.** Entry timeline with kind and evidence badges, a quick-add
   bar (htmx, no page reload), a full edit page, and a History link per entry. Wire htmx into `base.html`.

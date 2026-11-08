@@ -111,3 +111,45 @@ TestClient deprecation as before). `ruff check` passed; `ruff format --check` pa
   kind's default (or none).
 - **Audit fix:** the `audit.py` change affects all tables. A naive datetime and an aware one
   that are the same instant are no longer logged as a change.
+
+## 2026-11-08 · 1.3 Safe Markdown
+
+**Files changed**
+- `src/benchledger/web/markdown.py`: new. markdown-it-py (CommonMark + tables +
+  strikethrough, raw HTML off) followed by an nh3 allow-list clean; links limited to
+  http/https/mailto, with `rel="noopener noreferrer nofollow"`.
+- `src/benchledger/web/deps.py`: registers the `markdown` Jinja filter.
+- `tests/test_markdown.py`: new.
+
+**Reviewer findings**
+
+Round 1:
+- High: none.
+- Medium: none.
+- Low, fixed:
+  - Documented that the output is safe as element content only.
+  - Images silently vanished: they now render as a link labelled "image: alt".
+  - Extra regression tests: tab- and entity-obfuscated `javascript:`, a style value with a
+    non-alignment property, a bad link in a table cell, relative links.
+- Low, not changed:
+  - Relative and protocol-relative links stay allowed, so entries can link to
+    `/projects/…`. Not script execution.
+  - No `class` on `code` (no syntax highlighting yet).
+  - linkify off: bare URLs aren't clickable.
+
+Round 2 (re-review of the image rule):
+- High: none.
+- Medium: none.
+- Low, not changed: the render-rule parameters are unannotated; the image title is dropped.
+
+**Tester:** pytest 118 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+**Judgment calls**
+- **Images:** not displayed until M12 provides local file storage. Loading external images
+  would need internet access (N9) and could track reads.
+- **`markupsafe`:** imported directly. It is a required dependency of Jinja2, already
+  installed, so this is not a new dependency.
+- **Two failing first-draft tests:** both outputs were already safe; the assertions were
+  wrong. One looked for the `onerror=` text inside escaped output; the other put a `<th>`
+  outside a table. Both were corrected, not the code.
