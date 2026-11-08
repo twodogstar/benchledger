@@ -34,7 +34,7 @@ Branch: `feat/iter1-notebook` from `main`.
   offline):
   `mkdir -p src/benchledger/web/static/vendor && curl -L -o src/benchledger/web/static/vendor/htmx.min.js https://unpkg.com/htmx.org@2/dist/htmx.min.js`.
   Commit both.
-- [ ] **1.1 Entry model.** Migration `0003`: `entries` (project, kind = observation / hypothesis /
+- [x] **1.1 Entry model.** Migration `0003`: `entries` (project, kind = observation / hypothesis /
   decision / note / question, title, body Markdown, evidence label, source, status, occurred_at
   UTC, author, soft delete), audited through the change log. Evidence labels as a managed list (D1).
   Accept: migration upgrades and downgrades cleanly; creating and editing an entry writes change-log rows.

@@ -9,7 +9,7 @@
   </div>
   {% if record and table_name == "projects" %}
   <div class="actions"><a class="btn" href="/projects/{{ record.slug }}">Back to project</a></div>
-  {% elif table_name == "areas" %}
+  {% elif table_name in ("areas", "evidence_labels") %}
   <div class="actions"><a class="btn" href="/settings/lists">Back to lists</a></div>
   {% endif %}
 </header>

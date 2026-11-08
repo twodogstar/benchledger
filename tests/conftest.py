@@ -1,11 +1,12 @@
 """Shared test fixtures. Every test gets its own temporary data folder."""
 
 import pytest
+from alembic.script import ScriptDirectory
 from fastapi.testclient import TestClient
 
 from benchledger.app import create_app
 from benchledger.config import Settings
-from benchledger.db.migrate import upgrade
+from benchledger.db.migrate import alembic_config, upgrade
 from benchledger.db.session import make_engine, make_session_factory
 
 
@@ -35,3 +36,9 @@ def client(migrated):
     with TestClient(app) as test_client:
         yield test_client
     app.state.engine.dispose()
+
+
+@pytest.fixture
+def head_revision(settings) -> str:
+    """The newest migration, so tests don't need updating each time one is added."""
+    return ScriptDirectory.from_config(alembic_config(settings)).get_current_head()

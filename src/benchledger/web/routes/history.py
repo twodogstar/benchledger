@@ -3,13 +3,13 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
-from benchledger.db.models import Area, Project
+from benchledger.db.models import Area, EvidenceLabel, Project
 from benchledger.services.history import HISTORY_TABLES, history_for
 from benchledger.web.deps import SessionDep, templates
 
 router = APIRouter(prefix="/history")
 
-MODELS = {"projects": Project, "areas": Area}
+MODELS = {"projects": Project, "areas": Area, "evidence_labels": EvidenceLabel}
 
 
 @router.get("/{table_name}/{row_id}", response_class=HTMLResponse)

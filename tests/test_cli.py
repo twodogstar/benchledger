@@ -19,7 +19,7 @@ def test_help_lists_commands():
         assert command in result.output
 
 
-def test_db_upgrade_then_current(tmp_path, monkeypatch):
+def test_db_upgrade_then_current(tmp_path, monkeypatch, head_revision):
     monkeypatch.setenv("BENCHLEDGER_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))  # ignore any real config file
 
@@ -28,4 +28,4 @@ def test_db_upgrade_then_current(tmp_path, monkeypatch):
 
     result = runner.invoke(app, ["db", "current"])
     assert result.exit_code == 0
-    assert "0002" in result.output
+    assert head_revision in result.output

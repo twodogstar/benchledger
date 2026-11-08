@@ -9,38 +9,42 @@
   </div>
 </header>
 
-<section class="panel">
-  <h2>Project areas</h2>
+{% for section in sections %}
+{% set ln = section.name %}
+{% set noun = section.spec.noun %}
+<section class="panel" id="list-{{ ln }}">
+  <h2>{{ section.spec.title }}</h2>
   <div class="table-wrap">
   <table class="list-table">
     <tbody>
-    {% for a in areas %}
+    {% for a in section["items"] %}
+      {% set key = ln ~ ":" ~ a.id %}
       <tr class="{{ 'retired' if a.archived_at }}">
         <td class="grow">
-          <form class="inline" method="post" action="/settings/areas/{{ a.id }}/rename">
-            <input name="name" value="{{ a.name }}" maxlength="60" aria-label="Name for {{ a.name }}">
+          <form class="inline" method="post" action="/settings/{{ ln }}/{{ a.id }}/rename">
+            <input name="name" value="{{ values.get(key, a.name) }}" maxlength="60" aria-label="Name for {{ a.name }}">
             <button class="btn small" type="submit">Rename</button>
           </form>
-          {% if errors.get(a.id) %}<em class="error">{{ errors.get(a.id) }}</em>{% endif %}
+          {% if errors.get(key) %}<em class="error">{{ errors.get(key) }}</em>{% endif %}
         </td>
         {% if a.archived_at %}
         <td class="muted">Retired</td>
-        <td></td>
+        <td><a class="muted small-link" href="/history/{{ section.table }}/{{ a.id }}">History</a></td>
         <td>
-          <form method="post" action="/settings/areas/{{ a.id }}/restore">
+          <form method="post" action="/settings/{{ ln }}/{{ a.id }}/restore">
             <button class="btn small" type="submit">Restore</button>
           </form>
         </td>
         {% else %}
         <td class="nowrap">
-          <form class="inline" method="post" action="/settings/areas/{{ a.id }}/move">
+          <form class="inline" method="post" action="/settings/{{ ln }}/{{ a.id }}/move">
             <button class="btn small" name="direction" value="up" title="Move up" aria-label="Move {{ a.name }} up">↑</button>
             <button class="btn small" name="direction" value="down" title="Move down" aria-label="Move {{ a.name }} down">↓</button>
           </form>
         </td>
-        <td><a class="muted small-link" href="/history/areas/{{ a.id }}">History</a></td>
+        <td><a class="muted small-link" href="/history/{{ section.table }}/{{ a.id }}">History</a></td>
         <td>
-          <form method="post" action="/settings/areas/{{ a.id }}/archive">
+          <form method="post" action="/settings/{{ ln }}/{{ a.id }}/archive">
             <button class="btn small" type="submit">Retire</button>
           </form>
         </td>
@@ -51,10 +55,12 @@
   </table>
   </div>
 
-  <form class="inline add-row" method="post" action="/settings/areas">
-    <input name="name" placeholder="New area name" maxlength="60" value="{{ values.get('name', '') }}" aria-label="New area name">
-    <button class="btn primary small" type="submit">Add area</button>
+  {% set new_key = ln ~ ":new" %}
+  <form class="inline add-row" method="post" action="/settings/{{ ln }}">
+    <input name="name" placeholder="New {{ noun }}" maxlength="60" value="{{ values.get(new_key, '') }}" aria-label="New {{ noun }}">
+    <button class="btn primary small" type="submit">Add {{ noun }}</button>
   </form>
-  {% if errors.get("new") %}<em class="error">{{ errors.get("new") }}</em>{% endif %}
+  {% if errors.get(new_key) %}<em class="error">{{ errors.get(new_key) }}</em>{% endif %}
 </section>
+{% endfor %}
 {% endblock %}

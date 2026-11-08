@@ -7,11 +7,11 @@ from benchledger.db.migrate import current_revision
 from benchledger.db.session import make_engine
 
 
-def test_upgrade_creates_tables(migrated):
+def test_upgrade_creates_tables(migrated, head_revision):
     engine = make_engine(migrated.database_url)
     tables = set(inspect(engine).get_table_names())
     assert {"users", "change_log", "alembic_version"} <= tables
-    assert current_revision(engine) == "0002"
+    assert current_revision(engine) == head_revision
     engine.dispose()
 
 
