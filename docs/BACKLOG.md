@@ -38,7 +38,7 @@ Branch: `feat/iter1-notebook` from `main`.
   decision / note / question, title, body Markdown, evidence label, source, status, occurred_at
   UTC, author, soft delete), audited through the change log. Evidence labels as a managed list (D1).
   Accept: migration upgrades and downgrades cleanly; creating and editing an entry writes change-log rows.
-- [ ] **1.2 Entry service.** Create, edit, soft-delete, restore, and a timeline per project
+- [x] **1.2 Entry service.** Create, edit, soft-delete, restore, and a timeline per project
   (newest first, filter by kind). Hypotheses default to `Untested`, questions to `Open`.
   Accept: unit tests for each operation, including "edit keeps the old text in history".
 - [ ] **1.3 Safe Markdown.** Render entry bodies with markdown-it-py, cleaned with nh3.

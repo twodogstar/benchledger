@@ -52,3 +52,62 @@ TestClient deprecation, already present before this item). `ruff check` passed;
   labels. Faults (1.7) can reuse the same labels.
 - **Database-level checks:** kinds are also enforced by the database, so adding a kind later
   needs a migration.
+
+## 2026-11-08 · 1.2 Entry service
+
+**Files changed**
+- `src/benchledger/timeutil.py`: new. N7 helpers convert a local form time to UTC plus the
+  source offset, read values back as UTC, and handle DST edges and the year range.
+- `src/benchledger/services/entries.py`: new. Create, edit, soft-delete, restore, get, and a
+  timeline that is newest first, can filter by kind and includes deleted entries on request.
+- `src/benchledger/services/__init__.py`: `parse_id`, a safe form-id parser.
+- `src/benchledger/services/projects.py`: uses `parse_id` (same bug as entries, see below).
+- `src/benchledger/db/audit.py`: datetimes are logged as UTC, and an update is detected by
+  comparing the logged text.
+- `tests/test_entries.py`: new.
+
+**Reviewer findings**
+
+Round 1:
+- High: none.
+- Medium, all fixed:
+  - Editing an entry stored in the repeated fall-back hour (01:30 PST) moved it back an hour.
+    Fixed: a resubmitted time that matches what the form showed is kept as stored.
+  - Odd ids (`"²"`, 30 digits) and extreme years (`9999-12-31`) gave a 500. Fixed:
+    `parse_id`, and years are limited to 1900–2200. The same id bug in `projects.py`
+    (area id) is fixed too.
+  - Every edit logged a false `occurred_at` change: SQLite returns naive datetimes, and a
+    naive datetime never equals an aware one. Fixed in `audit.py`, so it applies to every
+    table.
+- Low, all fixed:
+  - `delete_entry` now rejects a naive `at`.
+  - A time in the spring-forward gap now gets an offset consistent with its instant.
+  - The body is capped at 100,000 characters.
+  - Fields passed as `None` are handled.
+  - Editing a deleted entry is refused.
+  - Added tests for no-op repeat delete and restore, and for each fix.
+
+Round 2 (re-review):
+- High: none. Medium: none.
+- Low, fixed: the `parse_id` docstring wording.
+- Low, deferred:
+  - The "Restore before editing" error has no form field: 1.4's page must show form-level
+    errors.
+  - Windows `OSError` for pre-1970 times: Linux-only app, ignored.
+- Low, accepted: an entry at 01:30 PST can't be deliberately moved to 01:30 PDT through the
+  form. This follows from the fold=0 choice.
+
+**Tester:** pytest 91 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+**Judgment calls**
+- **Local time zone:** "local" (N7 display, form input) is the machine's own zone; there's no
+  config setting for it.
+- **Ambiguous fall-back hour:** a time typed in the repeated hour is read as its first
+  occurrence (PDT). The second occurrence can only be stored by an import, not typed.
+- **Blank time:** on create, the time defaults to now (to the minute); on edit, a blank time
+  keeps the existing one.
+- **Kind change:** if an edit changes the kind, a status that no longer fits resets to the new
+  kind's default (or none).
+- **Audit fix:** the `audit.py` change affects all tables. A naive datetime and an aware one
+  that are the same instant are no longer logged as a change.

@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from benchledger.db.models import Area, Project
-from benchledger.services import InvalidInput
+from benchledger.services import InvalidInput, parse_id
 
 STAGES = ["Idea", "Planning", "Active", "Paused", "Blocked", "Done"]
 PRIORITIES = ["High", "Medium", "Low"]
@@ -78,7 +78,8 @@ def _validate(session: Session, data: dict[str, str], current: Project | None) -
     clean["area_id"] = None
     raw_area = (data.get("area_id") or "").strip()
     if raw_area:
-        area = session.get(Area, int(raw_area)) if raw_area.isdigit() else None
+        area_id = parse_id(raw_area)
+        area = session.get(Area, area_id) if area_id is not None else None
         keeping_old = current is not None and area is not None and area.id == current.area_id
         if area is None or (area.archived_at is not None and not keeping_old):
             errors["area_id"] = "Pick an area from the list."

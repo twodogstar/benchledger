@@ -20,6 +20,7 @@ from sqlalchemy import event, insert, inspect
 from sqlalchemy.orm import Session
 
 from benchledger.db.models import OWNER_ID, Audited, ChangeLog
+from benchledger.timeutil import as_utc
 
 # Bookkeeping columns that change on every write and would only add noise.
 SKIP_FIELDS = {"id", "created_at", "updated_at"}
@@ -28,7 +29,9 @@ SKIP_FIELDS = {"id", "created_at", "updated_at"}
 def _as_text(value: Any) -> str | None:
     if value is None:
         return None
-    if isinstance(value, datetime | date):
+    if isinstance(value, datetime):
+        return as_utc(value).isoformat()
+    if isinstance(value, date):
         return value.isoformat()
     return str(value)
 
@@ -75,7 +78,9 @@ def _change_rows(session: Session) -> list[dict]:
                 continue
             old = history.deleted[0] if history.deleted else None
             new = history.added[0] if history.added else None
-            if old != new:
+            # Compare as logged text: SQLite hands datetimes back naive (UTC), while new
+            # values are aware, and a naive datetime never equals an aware one.
+            if _as_text(old) != _as_text(new):
                 add(obj, "update", attr.key, old, new)
 
     for obj in session.deleted:
