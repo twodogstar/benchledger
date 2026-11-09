@@ -75,6 +75,33 @@ def to_local(value: datetime, tz: tzinfo | None = None) -> datetime:
     return utc.astimezone(tz) if tz is not None else utc.astimezone()
 
 
+def format_offset(minutes: int) -> str:
+    """-420 -> 'UTC-07:00'."""
+    sign = "-" if minutes < 0 else "+"
+    hours, mins = divmod(abs(minutes), 60)
+    return f"UTC{sign}{hours:02d}:{mins:02d}"
+
+
+def display(value: datetime | None, tz: tzinfo | None = None) -> str:
+    """A stored datetime as local time for pages: '2026-10-31 18:20 PDT'."""
+    if value is None:
+        return ""
+    return to_local(value, tz).strftime("%Y-%m-%d %H:%M %Z").strip()
+
+
+def iso_utc(value: datetime | None) -> str:
+    """Machine-readable UTC for <time datetime="…">: '2026-11-01T01:20:00Z'."""
+    if value is None:
+        return ""
+    return as_utc(value).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def display_utc(value: datetime | None) -> str:
+    if value is None:
+        return ""
+    return as_utc(value).strftime("%Y-%m-%d %H:%M UTC")
+
+
 def form_value(value: datetime, tz: tzinfo | None = None) -> str:
     """A stored datetime as a datetime-local form value, in local time."""
     return to_local(value, tz).strftime(FORM_FORMAT)

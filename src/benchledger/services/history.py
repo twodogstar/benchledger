@@ -10,6 +10,7 @@ from benchledger.db.models import ChangeLog
 # Tables whose history can be shown, with a label for page titles.
 HISTORY_TABLES = {
     "projects": "Project",
+    "entries": "Entry",
     "areas": "Area",
     "evidence_labels": "Evidence label",
 }

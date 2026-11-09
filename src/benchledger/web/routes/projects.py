@@ -7,6 +7,7 @@ from benchledger.services import InvalidInput
 from benchledger.services import areas as area_service
 from benchledger.services import projects as project_service
 from benchledger.web.deps import SessionDep, form_data, redirect, templates
+from benchledger.web.routes.entries import notebook_context
 
 router = APIRouter(prefix="/projects")
 
@@ -79,11 +80,13 @@ async def create_project(request: Request, session: SessionDep):
 
 
 @router.get("/{slug}", response_class=HTMLResponse)
-def project_detail(request: Request, session: SessionDep, slug: str):
+def project_detail(
+    request: Request, session: SessionDep, slug: str, kind: str = "", deleted: bool = False
+):
     project = _project_or_404(session, slug)
-    return templates.TemplateResponse(
-        request, "projects/detail.html", {"active": "projects", "project": project}
-    )
+    context = notebook_context(session, project, kind=kind, show_deleted=deleted)
+    context["active"] = "projects"
+    return templates.TemplateResponse(request, "projects/detail.html", context)
 
 
 @router.get("/{slug}/edit", response_class=HTMLResponse)

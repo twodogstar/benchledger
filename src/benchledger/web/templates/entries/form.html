@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Edit entry · {{ project.name }} · BenchLedger{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div>
+    <div class="eyebrow">BenchLedger / {{ project.name }} / notebook</div>
+    <h1>Edit entry</h1>
+    <p class="sub">The old text stays in this entry's history, so what was believed on a given date can always be recovered.</p>
+  </div>
+  <div class="actions"><a class="btn" href="/history/entries/{{ entry.id }}">History</a></div>
+</header>
+
+<form class="panel form" method="post" action="/projects/{{ project.slug }}/entries/{{ entry.id }}/edit">
+  {% if errors %}
+  <p class="error-summary">{{ errors.get('entry') or "Please fix the highlighted fields." }}</p>
+  {% endif %}
+
+  <div class="row">
+    <label class="field">
+      <span>Kind</span>
+      <select name="kind">
+        {% for k in kinds %}
+        <option value="{{ k }}" {% if values.get('kind') == k %}selected{% endif %}>{{ k | capitalize }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.get('kind') %}<em class="error">{{ errors.get('kind') }}</em>{% endif %}
+    </label>
+    <label class="field grow">
+      <span>Title</span>
+      <input name="title" value="{{ values.get('title', '') }}" maxlength="200" required autofocus>
+      {% if errors.get('title') %}<em class="error">{{ errors.get('title') }}</em>{% endif %}
+    </label>
+  </div>
+
+  <label class="field">
+    <span>Details <small class="muted">Markdown</small></span>
+    <textarea name="body" rows="10">{{ values.get('body', '') }}</textarea>
+    {% if errors.get('body') %}<em class="error">{{ errors.get('body') }}</em>{% endif %}
+  </label>
+
+  <div class="row">
+    <label class="field">
+      <span>Evidence</span>
+      <select name="evidence_label_id">
+        <option value="">— none —</option>
+        {% for label in labels %}
+        <option value="{{ label.id }}" {% if values.get('evidence_label_id') == label.id | string %}selected{% endif %}>
+          {{ label.name }}{% if label.archived_at %} (retired){% endif %}</option>
+        {% endfor %}
+      </select>
+      {% if errors.get('evidence_label_id') %}<em class="error">{{ errors.get('evidence_label_id') }}</em>{% endif %}
+    </label>
+    <label class="field grow">
+      <span>Source</span>
+      <input name="source" value="{{ values.get('source', '') }}" maxlength="300">
+      {% if errors.get('source') %}<em class="error">{{ errors.get('source') }}</em>{% endif %}
+    </label>
+    <label class="field">
+      <span>When <small class="muted">local time</small></span>
+      <input type="datetime-local" name="occurred_at" value="{{ values.get('occurred_at', '') }}">
+      {% if errors.get('occurred_at') %}<em class="error">{{ errors.get('occurred_at') }}</em>{% endif %}
+    </label>
+  </div>
+
+  {% if entry.status %}
+  <p class="muted">Status: {{ entry.status }}. Changing the kind resets a status that no longer fits; the old one stays in History.</p>
+  {% endif %}
+
+  <div class="actions">
+    <button class="btn primary" type="submit">Save changes</button>
+    <a class="btn" href="/projects/{{ project.slug }}#entry-{{ entry.id }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

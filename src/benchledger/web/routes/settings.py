@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 
 from benchledger.services import InvalidInput
 from benchledger.services import lists as list_service
-from benchledger.web.deps import SessionDep, form_data, redirect, templates
+from benchledger.web.deps import RecordId, SessionDep, form_data, redirect, templates
 
 router = APIRouter(prefix="/settings")
 
@@ -46,7 +46,7 @@ def _spec_or_404(list_name: str) -> list_service.ListSpec:
     return spec
 
 
-def _item_or_404(session, list_name: str, item_id: int):
+def _item_or_404(session, list_name: str, item_id: RecordId):
     item = list_service.get_item(session, _spec_or_404(list_name).model, item_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -80,7 +80,7 @@ async def add_item(request: Request, session: SessionDep, list_name: str):
 
 
 @router.post("/{list_name}/{item_id}/rename")
-async def rename_item(request: Request, session: SessionDep, list_name: str, item_id: int):
+async def rename_item(request: Request, session: SessionDep, list_name: str, item_id: RecordId):
     item = _item_or_404(session, list_name, item_id)
     data = await form_data(request, ["name"])
     try:
@@ -100,7 +100,7 @@ async def rename_item(request: Request, session: SessionDep, list_name: str, ite
 
 
 @router.post("/{list_name}/{item_id}/move")
-async def move_item(request: Request, session: SessionDep, list_name: str, item_id: int):
+async def move_item(request: Request, session: SessionDep, list_name: str, item_id: RecordId):
     item = _item_or_404(session, list_name, item_id)
     data = await form_data(request, ["direction"])
     try:
@@ -112,14 +112,14 @@ async def move_item(request: Request, session: SessionDep, list_name: str, item_
 
 
 @router.post("/{list_name}/{item_id}/archive")
-def archive_item(session: SessionDep, list_name: str, item_id: int):
+def archive_item(session: SessionDep, list_name: str, item_id: RecordId):
     list_service.archive_item(session, _item_or_404(session, list_name, item_id))
     session.commit()
     return redirect("/settings/lists")
 
 
 @router.post("/{list_name}/{item_id}/restore")
-def restore_item(session: SessionDep, list_name: str, item_id: int):
+def restore_item(session: SessionDep, list_name: str, item_id: RecordId):
     list_service.restore_item(session, _item_or_404(session, list_name, item_id))
     session.commit()
     return redirect("/settings/lists")

@@ -43,7 +43,7 @@ Branch: `feat/iter1-notebook` from `main`.
   Accept: unit tests for each operation, including "edit keeps the old text in history".
 - [x] **1.3 Safe Markdown.** Render entry bodies with markdown-it-py, cleaned with nh3.
   Accept: tests show `<script>`, `onerror=` and `javascript:` links are stripped (N9).
-- [ ] **1.4 Notebook on the project page.** Entry timeline with kind and evidence badges, a quick-add
+- [x] **1.4 Notebook on the project page.** Entry timeline with kind and evidence badges, a quick-add
   bar (htmx, no page reload), a full edit page, and a History link per entry. Wire htmx into `base.html`.
   Accept: web tests add, edit and delete an entry through the routes; the page escapes user text.
 - [ ] **1.5 Hypotheses and questions (M3).** Status changes (Untested, Testing, Supported, Rejected;

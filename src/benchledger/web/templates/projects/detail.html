@@ -36,11 +36,9 @@
     {% if text %}<p class="prose">{{ text }}</p>{% else %}<p class="muted">Not written yet.</p>{% endif %}
   </div>
   {% endfor %}
-  <div class="panel muted-panel">
-    <h2>Notebook and tasks</h2>
-    <p class="muted">Dated entries and next-step tasks arrive in the next two pull requests.</p>
-  </div>
 </section>
+
+{% include "projects/_notebook.html" %}
 
 <form class="danger-zone" method="post"
       action="/projects/{{ project.slug }}/{{ 'restore' if project.archived_at else 'archive' }}">

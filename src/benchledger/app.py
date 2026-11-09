@@ -15,7 +15,7 @@ from benchledger.db.migrate import current_revision
 from benchledger.db.session import make_engine, make_session_factory
 from benchledger.services import projects as project_service
 from benchledger.web.deps import WEB_DIR, SessionDep, templates
-from benchledger.web.routes import history, projects, settings
+from benchledger.web.routes import entries, history, projects, settings
 
 
 def create_app(app_settings: Settings | None = None) -> FastAPI:
@@ -29,6 +29,7 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
 
     app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
     app.include_router(projects.router)
+    app.include_router(entries.router)
     app.include_router(settings.router)
     app.include_router(history.router)
 

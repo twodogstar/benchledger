@@ -153,3 +153,64 @@ TestClient deprecation as before). `ruff check` passed; `ruff format --check` pa
 - **Two failing first-draft tests:** both outputs were already safe; the assertions were
   wrong. One looked for the `onerror=` text inside escaped output; the other put a `<th>`
   outside a table. Both were corrected, not the code.
+
+## 2026-11-08 · 1.4 Notebook on the project page
+
+**Files changed**
+- `src/benchledger/web/routes/entries.py`: new. Quick-add, edit page, delete and restore.
+  htmx requests get the notebook fragment; plain posts are redirected.
+- `src/benchledger/web/routes/projects.py`: the project page renders the notebook, with
+  `?kind=` and `?deleted=1`.
+- `src/benchledger/app.py`: registers the entries router.
+- `src/benchledger/web/templates/projects/_notebook.html`: new. Filter chips, quick-add bar,
+  timeline with kind, status and evidence badges, and Edit, History and Delete or Restore
+  per entry.
+- `src/benchledger/web/templates/entries/form.html`: new full edit page.
+- `src/benchledger/web/templates/projects/detail.html`: the notebook replaces the placeholder.
+- `src/benchledger/web/templates/base.html`: loads the vendored htmx and `js/benchledger.js`,
+  and has an error box.
+- `src/benchledger/web/static/js/benchledger.js`: new. Shows a message when an htmx request
+  fails, using `textContent` only.
+- `src/benchledger/web/static/css/benchledger.css`: notebook, badge and Markdown styles.
+- `src/benchledger/web/templates/history.html`, `web/routes/history.py`,
+  `services/history.py`: History covers entries, with a link back to the project.
+- `src/benchledger/timeutil.py`: `display`, `display_utc`, `iso_utc`, `format_offset`.
+- `src/benchledger/web/deps.py`: `localtime`, `utctime`, `isotime` and `utcoffset` filters,
+  and a `RecordId` path type bounded to SQLite's integer range.
+- `src/benchledger/web/routes/settings.py`: uses `RecordId`.
+- `tests/test_web_entries.py`: new.
+
+**Reviewer findings**
+- High: none.
+- Medium: none.
+- Low, fixed:
+  - An htmx add, delete or restore reset the kind filter and the "show deleted" view.
+    Hidden view fields now keep it, and the plain-form redirect keeps it too.
+  - `<time datetime>` wasn't machine-readable; it now uses ISO UTC.
+  - The edit page's status hint referred to controls that don't exist yet; reworded.
+  - htmx errors were invisible; a message box now appears.
+  - The edit form for a deleted entry led to an unsaveable form; it now redirects to the
+    deleted view.
+  - Huge ids gave a 500; `RecordId` bounds them (422).
+  - Test gaps: retired-label path, combined filters, and escaping on the edit form and the
+    History page.
+- Low, not changed:
+  - Changing the kind drops the status without a warning. It is logged, and the edit page
+    now explains it.
+  - A whitespace-only title passes the browser's `required` check. The server refuses it
+    with a message.
+
+**Tester:** pytest 146 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+The tester reported that a block of "MCP Server Instructions" showed up in its pytest
+output. I checked: nothing in the repo or `.venv` contains that text, and pytest's output
+mentions nothing about MCP. It most likely came from the subagent's own session context,
+not the project. The subagent didn't act on it.
+
+**Judgment calls**
+- **htmx validation errors:** they come back as 200 with the errors in the fragment, because
+  htmx only swaps 2xx. Plain form posts still get a 400 page.
+- **Small script file:** `static/js/benchledger.js` is plain JS with no build step and no
+  new dependency.
+- **Ids out of range:** they return 422, FastAPI's validation status, rather than 404.
