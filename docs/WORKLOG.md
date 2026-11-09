@@ -214,3 +214,52 @@ not the project. The subagent didn't act on it.
 - **Small script file:** `static/js/benchledger.js` is plain JS with no build step and no
   new dependency.
 - **Ids out of range:** they return 422, FastAPI's validation status, rather than 404.
+
+## 2026-11-08 · 1.5 Hypotheses and questions (M3)
+
+**Files changed**
+- `src/benchledger/services/entries.py`: `set_status` (validated per kind; refused on
+  deleted entries), `OPEN_STATUSES`, the `OPEN_FILTER` timeline branch, `PLURALS`.
+- `src/benchledger/web/routes/entries.py`: `POST …/entries/{id}/status`, `valid_filter`,
+  and statuses, plurals and the open filter added to the notebook context.
+- `src/benchledger/web/templates/projects/_notebook.html`: status picker with a Set button;
+  "Open hypotheses & questions" chip; plural chip labels; the timeline is wrapped in
+  `#timeline`, and per-entry actions swap only that part.
+- `src/benchledger/web/templates/entries/form.html`: hint about where status changes.
+- `src/benchledger/web/static/css/benchledger.css`: status picker styles.
+- `tests/test_status.py`: new.
+
+**Reviewer findings**
+
+Round 1:
+- High: none.
+- Medium, both fixed:
+  - Saving on `change` logged every status an arrow key passed, and the swap lost focus.
+    The status now saves only with the Set button, and the select has a stable id.
+  - A status change, delete or restore re-rendered the whole notebook and wiped a
+    half-typed quick-add draft. Those actions now replace only `#timeline`, using
+    `hx-select`.
+- Low, fixed:
+  - `in_()` was passed a dict; it now gets an explicit list, and the open statuses are sorted.
+  - The chip read "Hypothesiss"; plural labels fixed.
+  - Misleading comment on the 400 path corrected.
+  - Test gaps: view kept through htmx, deleted entry gets a 400, a same-status change logs
+    nothing, a kind change resets the status and is logged.
+- Low, not changed: a stale second tab can overwrite a newer status without a warning.
+  History records both changes, so nothing is lost.
+
+Round 2 (re-review):
+- High: none.
+- Medium: none.
+- Low, fixed: the template header comment; the empty-state wording uses plurals.
+- Low, accepted: `hx-select` would swap in empty content if a response lacked `#timeline`.
+  Every route returns the full notebook, so this can't happen today.
+
+**Tester:** pytest 163 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+**Judgment calls**
+- **"Open" filter:** shows hypotheses that are Untested or Testing, plus questions that
+  are Open.
+- **Status on the edit page:** it isn't editable there. It changes only from the timeline,
+  so each change is a single deliberate step in History.

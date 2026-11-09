@@ -46,7 +46,7 @@ Branch: `feat/iter1-notebook` from `main`.
 - [x] **1.4 Notebook on the project page.** Entry timeline with kind and evidence badges, a quick-add
   bar (htmx, no page reload), a full edit page, and a History link per entry. Wire htmx into `base.html`.
   Accept: web tests add, edit and delete an entry through the routes; the page escapes user text.
-- [ ] **1.5 Hypotheses and questions (M3).** Status changes (Untested, Testing, Supported, Rejected;
+- [x] **1.5 Hypotheses and questions (M3).** Status changes (Untested, Testing, Supported, Rejected;
   questions Open/Answered) from the timeline, each logged. A filter for open hypotheses and questions.
   Accept: a status change appears in History with before and after.
 - [ ] **1.6 Tasks (M5).** Migration `0004`: `tasks` (project, text, done, due date optional, order,

@@ -17,11 +17,21 @@ from benchledger.db.models import ENTRY_KINDS, Entry, EvidenceLabel, Project
 from benchledger.services import InvalidInput, parse_id
 
 KINDS = list(ENTRY_KINDS)
+PLURALS = {
+    "observation": "Observations",
+    "hypothesis": "Hypotheses",
+    "decision": "Decisions",
+    "note": "Notes",
+    "question": "Questions",
+}
 HYPOTHESIS_STATUSES = ["Untested", "Testing", "Supported", "Rejected"]
 QUESTION_STATUSES = ["Open", "Answered"]
 # Kinds that carry a status (M3), with the status a new entry starts at.
 STATUSES = {"hypothesis": HYPOTHESIS_STATUSES, "question": QUESTION_STATUSES}
 DEFAULT_STATUS = {"hypothesis": "Untested", "question": "Open"}
+# Still waiting for an answer: what the "open" timeline filter shows.
+OPEN_STATUSES = {"Untested", "Testing", "Open"}
+OPEN_FILTER = "open"  # timeline(kind="open"): open hypotheses and questions together
 
 FORM_FIELDS = ["kind", "title", "body", "evidence_label_id", "source", "occurred_at"]
 MAX_TITLE = 200
@@ -35,13 +45,20 @@ def timeline(
     kind: str | None = None,
     include_deleted: bool = False,
 ) -> list[Entry]:
-    """The project's entries, newest first by when they happened."""
+    """The project's entries, newest first by when they happened.
+
+    kind is one of KINDS, or OPEN_FILTER for hypotheses and questions still open.
+    """
     query = (
         select(Entry)
         .where(Entry.project_id == project.id)
         .order_by(Entry.occurred_at.desc(), Entry.id.desc())
     )
-    if kind:
+    if kind == OPEN_FILTER:
+        query = query.where(
+            Entry.kind.in_(list(STATUSES.keys())), Entry.status.in_(sorted(OPEN_STATUSES))
+        )
+    elif kind:
         query = query.where(Entry.kind == kind)
     if not include_deleted:
         query = query.where(Entry.deleted_at.is_(None))
@@ -148,6 +165,20 @@ def update_entry(
     for field, value in clean.items():
         setattr(entry, field, value)
     entry.status = _status_for(entry.kind, entry.status)
+    session.flush()
+    return entry
+
+
+def set_status(session: Session, entry: Entry, status: str) -> Entry:
+    """Change a hypothesis's or question's status (M3). The change log keeps the old one."""
+    if entry.deleted_at is not None:
+        raise InvalidInput({"entry": "Restore this entry before changing it."})
+    allowed = STATUSES.get(entry.kind)
+    if allowed is None:
+        raise InvalidInput({"status": f"A {entry.kind} has no status."})
+    if status not in allowed:
+        raise InvalidInput({"status": f"Pick one of: {', '.join(allowed)}."})
+    entry.status = status
     session.flush()
     return entry
 

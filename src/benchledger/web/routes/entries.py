@@ -62,13 +62,16 @@ def notebook_context(
     errors: dict | None = None,
 ) -> dict:
     """Everything the notebook fragment (projects/_notebook.html) needs."""
-    kind = kind if kind in entry_service.KINDS else ""
+    kind = valid_filter(kind)
     return {
         "project": project,
         "entries": entry_service.timeline(
             session, project, kind=kind or None, include_deleted=show_deleted
         ),
         "kinds": entry_service.KINDS,
+        "plurals": entry_service.PLURALS,
+        "statuses": entry_service.STATUSES,
+        "open_filter": entry_service.OPEN_FILTER,
         "kind": kind,
         "show_deleted": show_deleted,
         "labels": label_choices(session),
@@ -83,9 +86,13 @@ def _notebook_response(request: Request, context: dict, status_code: int = 200):
     )
 
 
+def valid_filter(kind: str) -> str:
+    """A kind filter from the URL or a form, or '' (show all) if it isn't one we know."""
+    return kind if kind in entry_service.KINDS or kind == entry_service.OPEN_FILTER else ""
+
+
 def _view(data: dict[str, str]) -> tuple[str, bool]:
-    kind = data.get("view_kind", "")
-    return (kind if kind in entry_service.KINDS else ""), data.get("view_deleted") == "1"
+    return valid_filter(data.get("view_kind", "")), data.get("view_deleted") == "1"
 
 
 def _project_url(
@@ -204,3 +211,20 @@ async def restore_entry(request: Request, session: SessionDep, slug: str, entry_
     entry_service.restore_entry(session, entry_or_404(session, project, entry_id))
     session.commit()
     return _after_change(request, session, project, view)
+
+
+@router.post("/{entry_id}/status")
+async def set_status(request: Request, session: SessionDep, slug: str, entry_id: RecordId):
+    """Change a hypothesis's or question's status from the timeline (M3)."""
+    project = project_or_404(session, slug)
+    entry = entry_or_404(session, project, entry_id)
+    data = await form_data(request, ["status", *VIEW_FIELDS])
+    try:
+        entry_service.set_status(session, entry, data["status"])
+    except InvalidInput as exc:
+        session.rollback()
+        # The picker only offers valid choices, so this is usually a stale page (the entry
+        # was deleted or its kind changed in another tab); the page script shows a message.
+        raise HTTPException(status_code=400, detail="; ".join(exc.errors.values())) from exc
+    session.commit()
+    return _after_change(request, session, project, data)
