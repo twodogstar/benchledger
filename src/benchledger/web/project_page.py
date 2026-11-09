@@ -9,6 +9,7 @@ from fastapi import HTTPException, Request
 
 from benchledger.db.models import EvidenceLabel
 from benchledger.services import entries as entry_service
+from benchledger.services import faults as fault_service
 from benchledger.services import lists as list_service
 from benchledger.services import projects as project_service
 from benchledger.services import tasks as task_service
@@ -80,8 +81,17 @@ def tasks_context(session, project, *, values=None, errors=None) -> dict:
     }
 
 
-def project_page_context(session, project, **notebook) -> dict:
-    """The full project page: notebook plus checklist. notebook: kind, show_deleted, …"""
+def faults_context(session, project, *, show_all: bool = False) -> dict:
+    """What the fault panel (projects/_faults.html) needs."""
+    return {
+        "faults": fault_service.list_faults(session, project, include_deleted=show_all),
+        "show_all_faults": show_all,
+    }
+
+
+def project_page_context(session, project, *, show_all_faults: bool = False, **notebook) -> dict:
+    """The full project page: notebook, checklist and faults. notebook: kind, show_deleted, …"""
     context = notebook_context(session, project, **notebook)
-    context.update(tasks_context(session, project), active="projects")
+    context.update(tasks_context(session, project))
+    context.update(faults_context(session, project, show_all=show_all_faults), active="projects")
     return context

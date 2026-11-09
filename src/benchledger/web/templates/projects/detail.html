@@ -38,7 +38,10 @@
   {% endfor %}
 </section>
 
-{% include "projects/_tasks.html" %}
+<section class="grid two">
+  <div>{% include "projects/_tasks.html" %}</div>
+  <div>{% include "projects/_faults.html" %}</div>
+</section>
 
 {% include "projects/_notebook.html" %}
 

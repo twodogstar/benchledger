@@ -316,3 +316,61 @@ TestClient deprecation as before). `ruff check` passed; `ruff format --check` pa
 - **No editing task text:** not in the item. Delete and re-add instead.
 - **Checklist placement:** shown above the notebook so next steps are visible without
   scrolling past the timeline.
+
+## 2026-11-08 · 1.7 Faults (M4)
+
+**Files changed**
+- `src/benchledger/migrations/versions/0005_faults.py`: new. Adds `faults` with CHECK
+  constraints: the status must be valid, and a Resolved fault needs a non-blank
+  resolution. The downgrade drops the table.
+- `src/benchledger/db/models.py`: `Fault` model and `FAULT_STATUSES`. The model's status
+  CHECK is built from that list.
+- `src/benchledger/services/faults.py`: new.
+  - `list_faults`: Open, then Investigating, then Resolved, newest first within each.
+  - Create and update, with resolution required for Resolved.
+  - Soft delete and restore.
+  - `open_faults()` across non-archived projects, for 1.8.
+- `src/benchledger/web/routes/faults.py`: new. New, edit, delete and restore. The edit
+  page for a deleted fault redirects to where it can be restored.
+- `src/benchledger/web/templates/faults/form.html`, `templates/projects/_faults.html`: new.
+- `src/benchledger/web/project_page.py`: `faults_context`. The project page takes
+  `?faults=all` to also show deleted faults.
+- `src/benchledger/web/routes/projects.py`, `templates/projects/detail.html`: Tasks and
+  Faults are shown side by side.
+- `src/benchledger/app.py`, `services/history.py`, `web/routes/history.py`: faults in
+  History, with long symptoms shortened in the title.
+- `src/benchledger/web/static/css/benchledger.css`: fault styles; equal-height two-column
+  panels.
+- `tests/test_faults.py`: new.
+
+**Reviewer findings**
+- High: none.
+- Medium: none.
+- Low, fixed:
+  - The model's CHECK duplicated the status list as a literal; it is now built from
+    `FAULT_STATUSES`. The migration keeps a literal, since migrations stay frozen.
+  - SQLite's `trim()` strips spaces only. The database check now treats tabs and newlines
+    as blank too, with a test.
+  - Status `<option>`s had no `value=`.
+  - The equal-height CSS depended on the panel margin; it now uses flex.
+- Low, not changed:
+  - Migration server defaults are not mirrored on the model. Same as 0003 and 0004,
+    explained in the migration comment.
+  - Editing a deleted fault by POST shows "Restore this fault before editing it." Correct
+    already.
+- Note for 1.8: `open_faults()` doesn't eager-load `project`. The dashboard should use
+  `selectinload` when it shows project names.
+
+**Tester:** pytest 200 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+**Judgment calls**
+- **Plain text, not Markdown:** fault fields render as plain text with line breaks kept.
+  They're short notes, and plain text keeps the escaping simple. Markdown can be added
+  later through the same filter as entries.
+- **No htmx:** faults use full-page post/redirect/get. The item asks for "its own edit
+  page", so there's no inline editing.
+- **Fault date:** shown as its `created_at` in local time. M4 lists no separate
+  "occurred at" field for faults.
+- **Restore:** faults have a restore button, like entries, because a deleted fault can
+  be evidence.

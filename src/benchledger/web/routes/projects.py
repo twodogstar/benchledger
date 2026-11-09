@@ -74,10 +74,17 @@ async def create_project(request: Request, session: SessionDep):
 
 @router.get("/{slug}", response_class=HTMLResponse)
 def project_detail(
-    request: Request, session: SessionDep, slug: str, kind: str = "", deleted: bool = False
+    request: Request,
+    session: SessionDep,
+    slug: str,
+    kind: str = "",
+    deleted: bool = False,
+    faults: str = "",
 ):
     project = project_or_404(session, slug)
-    context = project_page_context(session, project, kind=kind, show_deleted=deleted)
+    context = project_page_context(
+        session, project, kind=kind, show_deleted=deleted, show_all_faults=faults == "all"
+    )
     return templates.TemplateResponse(request, "projects/detail.html", context)
 
 

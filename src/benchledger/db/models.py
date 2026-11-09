@@ -7,6 +7,7 @@
   - evidence_labels: the editable list of evidence labels (decision D1)
   - entries:     dated notebook entries per project (requirements M2, M3)
   - tasks:       next-step checklist per project (requirement M5)
+  - faults:      fault tracker per project (requirement M4)
 
 Models that inherit `Audited` have every insert, update and delete written to change_log
 automatically (see db/audit.py). Keep models in step with the Alembic migrations;
@@ -37,6 +38,8 @@ OWNER_ID = 1  # the single owner account seeded by migration 0001
 
 # Entry kinds (M2, M3). Migration 0003 copies this list into a CHECK constraint.
 ENTRY_KINDS = ("observation", "hypothesis", "decision", "note", "question")
+# Fault statuses (M4). Migration 0005 copies this list into a CHECK constraint.
+FAULT_STATUSES = ("Open", "Investigating", "Resolved")
 
 
 class Audited:
@@ -199,3 +202,45 @@ class Task(Base, Audited):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     project: Mapped[Project] = relationship()
+
+
+class Fault(Base, Audited):
+    """Something broken on a project (M4): what it does, what would tell the explanations
+    apart, and how it was fixed. Resolved faults must say how (CHECK ck_faults_resolution).
+    """
+
+    __tablename__ = "faults"
+    __table_args__ = (
+        Index("ix_faults_project", "project_id", "status"),
+        CheckConstraint(
+            "status IN (" + ", ".join(f"'{s}'" for s in FAULT_STATUSES) + ")",
+            name="ck_faults_status",
+        ),
+        # Blank means only spaces, tabs or line breaks (SQLite's trim() strips spaces only).
+        CheckConstraint(
+            "status != 'Resolved' OR "
+            "trim(resolution, ' ' || char(9) || char(10) || char(13)) != ''",
+            name="ck_faults_resolution",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))
+    symptom: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="Open")
+    evidence_label_id: Mapped[int | None] = mapped_column(ForeignKey("evidence_labels.id"))
+    next_test: Mapped[str] = mapped_column(Text, default="")
+    resolution: Mapped[str] = mapped_column(Text, default="")
+    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), default=OWNER_ID)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    project: Mapped[Project] = relationship()
+    evidence_label: Mapped[EvidenceLabel | None] = relationship()

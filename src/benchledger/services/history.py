@@ -12,6 +12,7 @@ HISTORY_TABLES = {
     "projects": "Project",
     "entries": "Entry",
     "tasks": "Task",
+    "faults": "Fault",
     "areas": "Area",
     "evidence_labels": "Evidence label",
 }

@@ -52,7 +52,7 @@ Branch: `feat/iter1-notebook` from `main`.
 - [x] **1.6 Tasks (M5).** Migration `0004`: `tasks` (project, text, done, due date optional, order,
   author, soft delete). A checklist on the project page: add, tick, reorder, delete.
   Accept: service and web tests; ticking a task is logged.
-- [ ] **1.7 Faults (M4).** Migration `0005`: `faults` (project, symptom, status Open / Investigating /
+- [x] **1.7 Faults (M4).** Migration `0005`: `faults` (project, symptom, status Open / Investigating /
   Resolved, evidence label, next test, resolution, author, soft delete). Faults section with its own
   edit page. Accept: service and web tests; resolving requires a resolution text.
 - [ ] **1.8 Dashboard (M15 partial).** Replace the placeholder: active projects, recent entries,
