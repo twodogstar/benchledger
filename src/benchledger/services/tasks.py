@@ -61,12 +61,9 @@ def _parse_due(raw: str | None) -> date | None:
     if not raw:
         return None
     try:
-        due = date.fromisoformat(raw)
+        return timeutil.parse_date(raw)
     except ValueError as exc:
-        raise InvalidInput({"due_on": "Use a date like 2026-11-15."}) from exc
-    if not timeutil.MIN_YEAR <= due.year <= timeutil.MAX_YEAR:
-        raise InvalidInput({"due_on": "Use a date like 2026-11-15."})
-    return due
+        raise InvalidInput({"due_on": str(exc)}) from exc
 
 
 def create_task(session: Session, project: Project, data: dict[str, str]) -> Task:

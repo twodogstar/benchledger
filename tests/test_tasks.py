@@ -240,3 +240,119 @@ def test_bad_done_value_is_400(client, page):
     client.post(f"{page}/tasks", data={"text": "Mine"})
     assert client.post(f"{page}/tasks/1/done", data={"done": "yes"}).status_code == 400
     assert client.post(f"{page}/tasks/1/done").status_code == 200  # missing = not done
+
+
+# ---- due dates: picked, typed and invalid ----
+
+HTMX_HEADERS = {"HX-Request": "true"}
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("2026-11-15", date(2026, 11, 15)),  # what the calendar picker submits
+        ("2026-11-5", date(2026, 11, 5)),
+        ("2026/11/15", date(2026, 11, 15)),
+        ("20261115", date(2026, 11, 15)),
+        ("11/15/2026", date(2026, 11, 15)),  # US order, as typed in Los Angeles
+        ("1/5/2027", date(2027, 1, 5)),
+        ("11/15/26", date(2026, 11, 15)),
+        ("  2026-11-15  ", date(2026, 11, 15)),
+    ],
+)
+def test_typed_and_picked_due_dates_are_read(session, project, raw, expected):
+    assert add(session, project, "Probe the clock", due_on=raw).due_on == expected
+
+
+@pytest.mark.parametrize(
+    "raw, message",
+    [
+        ("soon", "Couldn’t read “soon” as a date"),
+        ("15.11.2026", "Couldn’t read"),
+        ("Nov 15 2026", "Couldn’t read"),
+        ("2026-02-30", "“2026-02-30” isn’t a real date (month 2, day 30)"),
+        ("15/11/2026", "isn’t a real date (month 15, day 11)"),  # day-first is refused
+        ("2026-13-01", "isn’t a real date"),
+        ("1/1/1850", "Pick a year between 1900 and 2200."),
+        ("9999-12-31", "Pick a year between 1900 and 2200."),
+    ],
+)
+def test_invalid_due_dates_get_a_clear_message(session, project, raw, message):
+    with pytest.raises(InvalidInput) as exc:
+        task_service.create_task(session, project, {"text": "x", "due_on": raw})
+    assert message.replace("’", "'") in exc.value.errors["due_on"]
+
+
+def test_very_long_input_is_shortened_in_the_message(session, project):
+    with pytest.raises(InvalidInput) as exc:
+        task_service.create_task(session, project, {"text": "x", "due_on": "y" * 500})
+    assert len(exc.value.errors["due_on"]) < 200
+
+
+def test_picked_date_through_the_page(client, page):
+    response = client.post(
+        f"{page}/tasks", data={"text": "Picked", "due_on": "2026-11-15"}, headers=HTMX_HEADERS
+    )
+    assert 'title="Due date">' in response.text and "2026-11-15" in response.text
+    # The add form is back to a date picker, empty, for the next task.
+    assert 'type="date" name="due_on"' in response.text
+
+
+def test_typed_date_through_the_page(client, page):
+    for headers in ({}, HTMX_HEADERS):
+        client.post(
+            f"{page}/tasks", data={"text": "Typed", "due_on": "11/20/2026"}, headers=headers
+        )
+    assert client.get(page).text.count(">2026-11-20<") == 2
+
+
+def test_invalid_typed_date_keeps_the_text_and_explains(client, page):
+    for headers, status in (({}, 400), (HTMX_HEADERS, 200)):
+        response = client.post(
+            f"{page}/tasks", data={"text": "Typed", "due_on": "2026-02-30"}, headers=headers
+        )
+        assert response.status_code == status
+        html = response.text
+        # Shown back in a text box: a date field would silently blank "2026-02-30".
+        assert 'type="text" name="due_on"' in html
+        assert 'value="2026-02-30"' in html
+        assert 'aria-describedby="due-on-error"' in html
+        assert "isn&#39;t a real date" in html or "isn't a real date" in html
+        assert 'value="Typed"' in html  # the task text is kept too
+    assert "Typed" not in client.get(page).text.split('id="tasks"')[1].split("<form")[0]
+
+
+def test_typed_date_in_the_error_is_escaped(client, page):
+    payload = '"><script>alert(1)</script>'
+    response = client.post(f"{page}/tasks", data={"text": "x", "due_on": payload})
+    assert response.status_code == 400
+    assert "<script>alert(1)</script>" not in response.text
+
+
+def test_non_ascii_digits_are_refused(session, project):
+    with pytest.raises(InvalidInput):
+        task_service.create_task(session, project, {"text": "x", "due_on": "٢٠٢٦-١١-١٥"})
+    with pytest.raises(InvalidInput):
+        task_service.create_task(session, project, {"text": "x", "due_on": "２０２６-１１-１５"})
+
+
+def test_year_zero_gets_the_range_message(session, project):
+    with pytest.raises(InvalidInput) as exc:
+        task_service.create_task(session, project, {"text": "x", "due_on": "0000-01-01"})
+    assert exc.value.errors["due_on"] == "Pick a year between 1900 and 2200."
+
+
+def test_valid_typed_date_survives_a_text_error(client, page):
+    # The date is fine but the text is missing: the date picker must get ISO back.
+    response = client.post(
+        f"{page}/tasks", data={"text": "", "due_on": "11/15/2026"}, headers=HTMX_HEADERS
+    )
+    assert "Write what needs doing." in response.text
+    assert 'type="date" name="due_on"' in response.text
+    assert 'value="2026-11-15"' in response.text
+
+
+def test_long_rejected_date_is_capped_when_shown_back(client, page):
+    response = client.post(f"{page}/tasks", data={"text": "x", "due_on": "y" * 500})
+    assert response.status_code == 400
+    assert "y" * 41 not in response.text

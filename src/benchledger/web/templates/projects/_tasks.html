@@ -41,10 +41,19 @@
         hx-post="/projects/{{ project.slug }}/tasks" hx-target="#tasks" hx-swap="outerHTML">
     <input name="text" placeholder="Next step" maxlength="300" required aria-label="New task"
            value="{{ task_values.get('text', '') }}">
-    <input type="date" name="due_on" aria-label="Due date (optional)" value="{{ task_values.get('due_on', '') }}">
+    {#- A date field throws away a value that isn't ISO, which would blank out a rejected
+        typed date. After a date error, show a text box with what was typed so it can be
+        corrected; otherwise use the date picker. -#}
+    {% if task_errors.get('due_on') %}
+    <input type="text" name="due_on" aria-label="Due date (optional)" aria-invalid="true"
+           aria-describedby="due-on-error" placeholder="YYYY-MM-DD" maxlength="40"
+           value="{{ task_values.get('due_on', '') }}">
+    {% else %}
+    <input type="date" name="due_on" aria-label="Due date (optional)" min="1900-01-01" max="2200-12-31"
+           value="{{ task_values.get('due_on', '') }}">
+    {% endif %}
     <button class="btn primary small" type="submit">Add</button>
   </form>
-  {% for field in ("text", "due_on") %}
-  {% if task_errors.get(field) %}<em class="error">{{ task_errors.get(field) }}</em>{% endif %}
-  {% endfor %}
+  {% if task_errors.get('text') %}<em class="error">{{ task_errors.get('text') }}</em>{% endif %}
+  {% if task_errors.get('due_on') %}<em class="error" id="due-on-error">{{ task_errors.get('due_on') }}</em>{% endif %}
 </section>

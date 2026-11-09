@@ -6,6 +6,7 @@ Like the notebook: htmx requests get the #tasks fragment back, plain form posts 
 from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from benchledger import timeutil
 from benchledger.db.models import Project, Task
 from benchledger.services import InvalidInput
 from benchledger.services import tasks as task_service
@@ -18,6 +19,18 @@ from benchledger.web.project_page import (
 )
 
 router = APIRouter(prefix="/projects/{slug}/tasks")
+
+
+def _due_for_form(raw: str) -> str:
+    """The typed due date to show back after an error.
+
+    A valid date goes back as ISO, because a date field discards any other shape and would
+    look empty. An invalid one goes back as typed (capped) for the text box to correct.
+    """
+    try:
+        return timeutil.parse_date(raw).isoformat() if raw.strip() else ""
+    except ValueError:
+        return raw.strip()[:40]
 
 
 def task_or_404(session: Session, project: Project, task_id: int) -> Task:
@@ -43,7 +56,8 @@ async def add_task(request: Request, session: SessionDep, slug: str):
         task_service.create_task(session, project, data)
     except InvalidInput as exc:
         session.rollback()
-        context = tasks_context(session, project, values=data, errors=exc.errors)
+        values = {**data, "due_on": _due_for_form(data["due_on"])}
+        context = tasks_context(session, project, values=values, errors=exc.errors)
         if is_htmx(request):
             return templates.TemplateResponse(request, "projects/_tasks.html", context)
         context.update(notebook_context(session, project), active="projects")

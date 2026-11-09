@@ -466,3 +466,64 @@ reaches `0005`. `benchledger version` prints 0.1.0.
 
 **Milestone 1 stops here.** Next is 🧑 1.10: review, push, PR, merge, tag `v0.1.0`, and
 README screenshots.
+
+## 2026-11-08 · Fix: typed due dates on tasks (M5)
+
+Owner bug report: on a project's next-step tasks, typing a due date by hand was rejected,
+while the calendar picker worked.
+
+**Cause (both the server and the input).** Reproduced by posting typed formats to the task
+route.
+- **Server:** `_parse_due` used `date.fromisoformat`, which accepts only `YYYY-MM-DD`
+  (and `YYYYMMDD`). A calendar pick always submits ISO, so picking worked. Text typed
+  any other way (`11/15/2026`, `2026-11-5`, `2026/11/15`) was refused. Raw typed text
+  reaches the server when the browser shows the field as a plain text box.
+- **Input:** after an error, the rejected text was echoed into `<input type="date">`.
+  Browsers discard a value that isn't ISO there, so the box looked empty. The message
+  ("Use a date like 2026-11-15") didn't say what was wrong, so the user retyped the same
+  way and was refused again.
+- **Not verified:** this was reproduced at the route and template level only. I did not
+  drive a real browser.
+
+**Files changed**
+- `src/benchledger/timeutil.py`: new `parse_date()`.
+  - Accepts year-month-day with `-` or `/` (padding optional), `YYYYMMDD`, and US
+    `M/D/YYYY` or `M/D/YY`.
+  - Only ASCII digits.
+  - Checks the year (1900–2200) before the calendar.
+  - Error messages quote the input (capped at 40 characters) and say why it failed.
+- `src/benchledger/services/tasks.py`: `_parse_due` uses `parse_date`.
+- `src/benchledger/web/routes/tasks.py`: `_due_for_form` shows the date back after an
+  error. A valid date goes back as ISO, so the picker keeps it. An invalid one goes back
+  as typed (capped).
+- `src/benchledger/web/templates/projects/_tasks.html`: after a due-date error the field is
+  a text box (with `aria-invalid` and `aria-describedby` pointing at the message) so the
+  typed text can be corrected; otherwise it's a date picker with min and max.
+- `src/benchledger/web/static/css/benchledger.css`: the width rule covers both input types.
+- `tests/test_tasks.py`: tests for picked ISO dates, eight typed formats, eight invalid
+  inputs with their messages, page round-trips with and without htmx, escaping of the
+  quoted input, non-ASCII digits, year 0, a valid date kept when the text is rejected,
+  and the length cap.
+
+**Reviewer findings**
+- High: none.
+- Medium: none.
+- Low, fixed:
+  - `\d` matched non-ASCII digits; the patterns are now `re.ASCII`.
+  - Year 0 got the "isn't a real date" message; the range check now runs first.
+  - A valid typed date was blanked when the *task text* failed validation; it is now
+    shown back as ISO.
+  - The echoed input wasn't capped; it is now capped at 40 characters.
+- Low, not changed: US order with dashes (`11-15-2026`) is refused. The message lists the
+  accepted forms.
+
+**Tester:** pytest 236 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+**Judgment calls**
+- **Slashes:** slashed dates are month first (US), because the bench is in
+  America/Los_Angeles, as in R1. A day-first date such as `15/11/2026` is refused with
+  "isn't a real date (month 15, day 11)" rather than guessed.
+- **Two-digit years:** these mean 20xx.
+- **Picker stays:** the field remains a date picker by default and becomes a text box
+  only after a date error. Making it always a text box would lose the picker.
