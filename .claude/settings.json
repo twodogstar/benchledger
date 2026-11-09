@@ -1,20 +1,19 @@
 {
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git log:*)",
+      "Bash(git status:*)",
+      "Bash(git branch:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git switch:*)",
+      "Bash(uv run alembic:*)",
       "Bash(uv run pytest:*)",
       "Bash(uv run ruff:*)",
-      "Bash(uv run alembic:*)",
       "Bash(uv run benchledger:*)",
-      "Bash(uv sync:*)",
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)",
-      "Bash(git show:*)",
-      "Bash(git branch:*)",
-      "Bash(git switch:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(uv sync:*)"
     ],
     "deny": [
       "Bash(git push:*)",
@@ -31,6 +30,7 @@
       "Bash(wget:*)",
       "Read(./.env)",
       "Read(./.env.*)"
-    ]
+    ],
+    "defaultMode": "acceptEdits"
   }
 }
