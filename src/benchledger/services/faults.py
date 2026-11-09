@@ -9,7 +9,7 @@ database). Deleting only sets `deleted_at`.
 from __future__ import annotations
 
 from sqlalchemy import case, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from benchledger import timeutil
 from benchledger.db.models import FAULT_STATUSES, EvidenceLabel, Fault, Project
@@ -46,6 +46,7 @@ def open_faults(session: Session, limit: int | None = None) -> list[Fault]:
             Project.archived_at.is_(None),
         )
         .order_by(_STATUS_ORDER, Fault.created_at.desc(), Fault.id.desc())
+        .options(selectinload(Fault.project), selectinload(Fault.evidence_label))
     )
     if limit is not None:
         query = query.limit(limit)

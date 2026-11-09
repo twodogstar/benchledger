@@ -55,7 +55,7 @@ Branch: `feat/iter1-notebook` from `main`.
 - [x] **1.7 Faults (M4).** Migration `0005`: `faults` (project, symptom, status Open / Investigating /
   Resolved, evidence label, next test, resolution, author, soft delete). Faults section with its own
   edit page. Accept: service and web tests; resolving requires a resolution text.
-- [ ] **1.8 Dashboard (M15 partial).** Replace the placeholder: active projects, recent entries,
+- [x] **1.8 Dashboard (M15 partial).** Replace the placeholder: active projects, recent entries,
   open faults, next tasks. Accept: web test with seeded data shows each tile.
 - [ ] **1.9 Release prep.** Update CHANGELOG, README feature list, and the design's screens table status.
   Accept: `uv run pytest`, `ruff check`, `ruff format --check` all green. Then STOP.

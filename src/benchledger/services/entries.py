@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime, tzinfo
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from benchledger import timeutil
 from benchledger.db.models import ENTRY_KINDS, Entry, EvidenceLabel, Project
@@ -62,6 +62,19 @@ def timeline(
         query = query.where(Entry.kind == kind)
     if not include_deleted:
         query = query.where(Entry.deleted_at.is_(None))
+    return list(session.scalars(query))
+
+
+def recent_entries(session: Session, limit: int = 8) -> list[Entry]:
+    """Newest entries across all non-archived projects (for the dashboard)."""
+    query = (
+        select(Entry)
+        .join(Project, Project.id == Entry.project_id)
+        .where(Entry.deleted_at.is_(None), Project.archived_at.is_(None))
+        .order_by(Entry.occurred_at.desc(), Entry.id.desc())
+        .options(selectinload(Entry.project), selectinload(Entry.evidence_label))
+        .limit(limit)
+    )
     return list(session.scalars(query))
 
 

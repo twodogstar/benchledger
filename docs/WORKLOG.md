@@ -374,3 +374,55 @@ TestClient deprecation as before). `ruff check` passed; `ruff format --check` pa
   "occurred at" field for faults.
 - **Restore:** faults have a restore button, like entries, because a deleted fault can
   be evidence.
+
+## 2026-11-08 · 1.8 Dashboard (M15 partial)
+
+**Files changed**
+- `src/benchledger/web/routes/dashboard.py`: new. The dashboard route moved out of
+  `app.py` (N10); the tiles are capped at 8 rows; a database that isn't fully migrated
+  falls back to the upgrade hint.
+- `src/benchledger/app.py`: dashboard route removed; `app.state.schema_revision` is shared
+  with `/healthz`.
+- `src/benchledger/services/entries.py`: `recent_entries`.
+- `src/benchledger/services/tasks.py`: `next_tasks`.
+- `src/benchledger/services/faults.py`: `open_faults` eager-loads the project and the
+  evidence label.
+- `src/benchledger/services/projects.py`: `list_projects` takes `limit` and eager-loads
+  the area.
+- `src/benchledger/web/templates/dashboard.html`: four tiles (active projects, open
+  faults, recent entries, next tasks) plus the existing version, schema and data-folder
+  stats.
+- `src/benchledger/web/static/css/benchledger.css`: tile styles.
+- `tests/test_dashboard.py`: new.
+
+**Reviewer findings**
+
+Round 1:
+- High: none.
+- Medium, fixed: the active-projects tile was unbounded and lazy-loaded each area (N+1).
+  It is now capped at 8 with an "All active projects →" link, and `list_projects`
+  eager-loads areas. A test checks it takes 2 statements.
+- Low, fixed:
+  - A partly migrated database (stamped but missing tables) returned a 500. It now rolls
+    back and shows the upgrade hint, with a test.
+  - The evidence label was loaded but not shown; the fault tile now displays it.
+- Low, accepted:
+  - Undated tasks sort by project then position, so older projects fill the 8 slots
+    first. Recorded below as a judgment call.
+  - An empty `class=""` on non-overdue rows. Harmless.
+
+Round 2 (re-review):
+- High: none.
+- Medium: none.
+- `selectinload` doesn't change the projects list page or the stage filter.
+
+**Tester:** pytest 211 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+**Judgment calls**
+- **Tiles:** recent entries, open faults and next tasks cover every non-archived project.
+  Archived projects' items are hidden.
+- **Next-task order:** dated tasks first, soonest due first. Then undated tasks by project
+  and checklist order, so older projects come first when there are more than 8.
+- **Not in this item:** "recent runs" (iteration 2) and backup status (iteration 3) are
+  left for their iterations, as the design's Screens table says.

@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import date
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from benchledger import timeutil
 from benchledger.db.models import Project, Task
@@ -25,6 +25,26 @@ def checklist(session: Session, project: Project) -> list[Task]:
         select(Task)
         .where(Task.project_id == project.id, Task.deleted_at.is_(None))
         .order_by(Task.done, Task.position, Task.id)
+    )
+    return list(session.scalars(query))
+
+
+def next_tasks(session: Session, limit: int = 8) -> list[Task]:
+    """Open tasks across all non-archived projects (for the dashboard).
+
+    Dated tasks first, soonest due first; then undated ones in each checklist's order.
+    """
+    query = (
+        select(Task)
+        .join(Project, Project.id == Task.project_id)
+        .where(
+            Task.done.is_(False),
+            Task.deleted_at.is_(None),
+            Project.archived_at.is_(None),
+        )
+        .order_by(Task.due_on.is_(None), Task.due_on, Task.project_id, Task.position, Task.id)
+        .options(selectinload(Task.project))
+        .limit(limit)
     )
     return list(session.scalars(query))
 

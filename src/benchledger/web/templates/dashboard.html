@@ -5,23 +5,81 @@
   <div>
     <div class="eyebrow">BenchLedger / dashboard</div>
     <h1>The bench, on record.</h1>
-    <p class="sub">What's active right now. Tasks and recent entries join this page later in iteration 1.</p>
+    <p class="sub">Active projects, the latest notebook entries, open faults and what's next, across every project.</p>
   </div>
   <div class="actions"><a class="btn primary" href="/projects/new">+ New project</a></div>
 </header>
 
-<section class="panel">
-  <h2>Active projects</h2>
-  {% if active_projects %}
-  <ul class="plain">
-    {% for p in active_projects %}
-    <li><a href="/projects/{{ p.slug }}">{{ p.name }}</a>
-      {% if p.area %}<span class="muted"> · {{ p.area.name }}</span>{% endif %}</li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="muted">No active projects. Set a project's stage to Active to see it here.</p>
-  {% endif %}
+<section class="grid two dash">
+  <div class="panel tile" id="tile-projects">
+    <h2>Active projects</h2>
+    {% if active_projects %}
+    <ul class="plain">
+      {% for p in active_projects %}
+      <li><a href="/projects/{{ p.slug }}">{{ p.name }}</a>
+        {% if p.area %}<span class="muted"> · {{ p.area.name }}</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% if more_projects %}<p><a class="small-link" href="/projects?stage=Active">All active projects →</a></p>{% endif %}
+    {% else %}
+    <p class="muted">No active projects. Set a project's stage to Active to see it here.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel tile" id="tile-faults">
+    <h2>Open faults</h2>
+    {% if open_faults %}
+    <ul class="tile-list">
+      {% for f in open_faults %}
+      <li>
+        <span class="badge status fault-{{ f.status | lower }}">{{ f.status }}</span>
+        {% if f.evidence_label %}<span class="badge evidence">{{ f.evidence_label.name }}</span>{% endif %}
+        <a href="/projects/{{ f.project.slug }}#fault-{{ f.id }}" class="clip-line">{{ f.symptom }}</a>
+        <span class="muted small-text">{{ f.project.name }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No open faults.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel tile" id="tile-entries">
+    <h2>Recent entries</h2>
+    {% if recent_entries %}
+    <ul class="tile-list">
+      {% for e in recent_entries %}
+      <li>
+        <span class="badge kind kind-{{ e.kind }}">{{ e.kind }}</span>
+        {% if e.status %}<span class="badge status status-{{ e.status | lower }}">{{ e.status }}</span>{% endif %}
+        {% if e.evidence_label %}<span class="badge evidence">{{ e.evidence_label.name }}</span>{% endif %}
+        <a href="/projects/{{ e.project.slug }}#entry-{{ e.id }}" class="clip-line">{{ e.title }}</a>
+        <span class="muted small-text">{{ e.project.name }} ·
+          <time datetime="{{ e.occurred_at | isotime }}">{{ e.occurred_at | localtime }}</time></span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No notebook entries yet. Add one from a project page.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel tile" id="tile-tasks">
+    <h2>Next tasks</h2>
+    {% if next_tasks %}
+    <ul class="tile-list">
+      {% for t in next_tasks %}
+      <li class="{{ 'overdue' if t.id in overdue }}">
+        {% if t.due_on %}<span class="badge due mono">{{ "overdue · " if t.id in overdue }}{{ t.due_on.isoformat() }}</span>{% endif %}
+        <a href="/projects/{{ t.project.slug }}#task-{{ t.id }}" class="clip-line">{{ t.text }}</a>
+        <span class="muted small-text">{{ t.project.name }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">Nothing on the list. Add next steps from a project page.</p>
+    {% endif %}
+  </div>
 </section>
 
 <section class="grid stats">
