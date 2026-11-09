@@ -1,0 +1,47 @@
+{#- Fault tracker on the project page (M4). User text is auto-escaped (N9). -#}
+<section class="panel faults" id="faults">
+  <div class="notebook-head">
+    <h2>Faults</h2>
+    <div class="actions">
+      {% if show_all_faults %}
+      <a class="chip on" href="/projects/{{ project.slug }}#faults">Showing deleted too</a>
+      {% else %}
+      <a class="chip" href="/projects/{{ project.slug }}?faults=all#faults">Show deleted</a>
+      {% endif %}
+      <a class="btn small primary" href="/projects/{{ project.slug }}/faults/new">+ New fault</a>
+    </div>
+  </div>
+  {% if faults %}
+  <ol class="timeline">
+    {% for f in faults %}
+    <li class="entry fault status-{{ f.status | lower }}{% if f.deleted_at %} deleted{% endif %}" id="fault-{{ f.id }}">
+      <div class="entry-top">
+        <span class="badge status fault-{{ f.status | lower }}">{{ f.status }}</span>
+        {% if f.evidence_label %}<span class="badge evidence">{{ f.evidence_label.name }}</span>{% endif %}
+        {% if f.deleted_at %}<span class="badge muted">Deleted</span>{% endif %}
+        <time class="when mono" datetime="{{ f.created_at | isotime }}" title="Logged {{ f.created_at | utctime }}">{{ f.created_at | localtime }}</time>
+      </div>
+      <p class="prose symptom">{{ f.symptom }}</p>
+      {% if f.next_test and f.status != "Resolved" %}<p class="prose small-text"><b>Next test:</b> {{ f.next_test }}</p>{% endif %}
+      {% if f.resolution %}<p class="prose small-text"><b>Resolution:</b> {{ f.resolution }}</p>{% endif %}
+      <div class="entry-actions">
+        {% if f.deleted_at %}
+        <form method="post" action="/projects/{{ project.slug }}/faults/{{ f.id }}/restore">
+          <button class="btn small" type="submit">Restore</button>
+        </form>
+        {% else %}
+        <a class="btn small" href="/projects/{{ project.slug }}/faults/{{ f.id }}/edit">Edit</a>
+        <form method="post" action="/projects/{{ project.slug }}/faults/{{ f.id }}/delete"
+              onsubmit="return confirm('Delete this fault? It can be restored from Show deleted.')">
+          <button class="btn small" type="submit">Delete</button>
+        </form>
+        {% endif %}
+        <a class="small-link muted" href="/history/faults/{{ f.id }}">History</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="muted empty-note">No faults recorded. Lucky.</p>
+  {% endif %}
+</section>

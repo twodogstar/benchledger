@@ -6,6 +6,9 @@
   <meta name="theme-color" content="#0a1117">
   <title>{% block title %}BenchLedger{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/benchledger.css') }}">
+  {# Vendored, no CDN: the app must run offline (N9). #}
+  <script src="{{ url_for('static', path='vendor/htmx.min.js') }}" defer></script>
+  <script src="{{ url_for('static', path='js/benchledger.js') }}" defer></script>
 </head>
 <body>
   <div class="app">
@@ -29,6 +32,7 @@
       </div>
     </aside>
     <main class="main">
+      <p class="notice htmx-error" id="htmx-error" role="alert" hidden></p>
       {% block content %}{% endblock %}
     </main>
   </div>

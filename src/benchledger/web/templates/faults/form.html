@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit fault" if fault else "New fault" }} · {{ project.name }} · BenchLedger{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div>
+    <div class="eyebrow">BenchLedger / {{ project.name }} / faults</div>
+    <h1>{{ "Edit fault" if fault else "New fault" }}</h1>
+    <p class="sub">What goes wrong, how sure you are, and the next test that would tell the possible explanations apart.</p>
+  </div>
+  {% if fault %}<div class="actions"><a class="btn" href="/history/faults/{{ fault.id }}">History</a></div>{% endif %}
+</header>
+
+<form class="panel form" method="post"
+      action="/projects/{{ project.slug }}/faults/{{ fault.id ~ '/edit' if fault else 'new' }}">
+  {% if errors %}
+  <p class="error-summary">{{ errors.get('fault') or "Please fix the highlighted fields." }}</p>
+  {% endif %}
+
+  <label class="field">
+    <span>Symptom <small class="muted">what you see, and when</small></span>
+    <textarea name="symptom" rows="3" required autofocus>{{ values.get('symptom', '') }}</textarea>
+    {% if errors.get('symptom') %}<em class="error">{{ errors.get('symptom') }}</em>{% endif %}
+  </label>
+
+  <div class="row">
+    <label class="field">
+      <span>Status</span>
+      <select name="status">
+        {% for s in statuses %}
+        <option value="{{ s }}" {% if values.get('status') == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.get('status') %}<em class="error">{{ errors.get('status') }}</em>{% endif %}
+    </label>
+    <label class="field">
+      <span>Evidence</span>
+      <select name="evidence_label_id">
+        <option value="">— none —</option>
+        {% for label in labels %}
+        <option value="{{ label.id }}" {% if values.get('evidence_label_id') == label.id | string %}selected{% endif %}>
+          {{ label.name }}{% if label.archived_at %} (retired){% endif %}</option>
+        {% endfor %}
+      </select>
+      {% if errors.get('evidence_label_id') %}<em class="error">{{ errors.get('evidence_label_id') }}</em>{% endif %}
+    </label>
+  </div>
+
+  <label class="field">
+    <span>Next test <small class="muted">what result would tell the explanations apart</small></span>
+    <textarea name="next_test" rows="3">{{ values.get('next_test', '') }}</textarea>
+    {% if errors.get('next_test') %}<em class="error">{{ errors.get('next_test') }}</em>{% endif %}
+  </label>
+
+  <label class="field">
+    <span>Resolution <small class="muted">required to mark it Resolved</small></span>
+    <textarea name="resolution" rows="3">{{ values.get('resolution', '') }}</textarea>
+    {% if errors.get('resolution') %}<em class="error">{{ errors.get('resolution') }}</em>{% endif %}
+  </label>
+
+  <div class="actions">
+    <button class="btn primary" type="submit">{{ "Save changes" if fault else "Add fault" }}</button>
+    <a class="btn" href="/projects/{{ project.slug }}#{{ 'fault-' ~ fault.id if fault else 'faults' }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -4,17 +4,21 @@ from benchledger import __version__
 from benchledger.app import create_app
 
 
-def test_dashboard_renders(client):
+def test_dashboard_renders(client, head_revision):
     response = client.get("/")
     assert response.status_code == 200
     assert "BENCH<em>LEDGER</em>" in response.text
-    assert "0002" in response.text  # schema revision shown
+    assert head_revision in response.text  # schema revision shown
 
 
-def test_healthz_reports_ok(client):
+def test_healthz_reports_ok(client, head_revision):
     response = client.get("/healthz")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": __version__, "schema_revision": "0002"}
+    assert response.json() == {
+        "status": "ok",
+        "version": __version__,
+        "schema_revision": head_revision,
+    }
 
 
 def test_healthz_reports_unmigrated_database(settings):

@@ -4,13 +4,11 @@
 <header class="topbar">
   <div>
     <div class="eyebrow">BenchLedger / history</div>
-    <h1>{{ label }} history{% if record %}: {{ record.name }}{% endif %}</h1>
+    <h1>{{ label }} history{% if record_label %}: {{ record_label }}{% endif %}</h1>
     <p class="sub">Every recorded change, newest first. Times are UTC.</p>
   </div>
-  {% if record and table_name == "projects" %}
-  <div class="actions"><a class="btn" href="/projects/{{ record.slug }}">Back to project</a></div>
-  {% elif table_name == "areas" %}
-  <div class="actions"><a class="btn" href="/settings/lists">Back to lists</a></div>
+  {% if back_url %}
+  <div class="actions"><a class="btn" href="{{ back_url }}">{{ back_text }}</a></div>
   {% endif %}
 </header>
 

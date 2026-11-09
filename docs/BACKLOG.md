@@ -34,30 +34,30 @@ Branch: `feat/iter1-notebook` from `main`.
   offline):
   `mkdir -p src/benchledger/web/static/vendor && curl -L -o src/benchledger/web/static/vendor/htmx.min.js https://unpkg.com/htmx.org@2/dist/htmx.min.js`.
   Commit both.
-- [ ] **1.1 Entry model.** Migration `0003`: `entries` (project, kind = observation / hypothesis /
+- [x] **1.1 Entry model.** Migration `0003`: `entries` (project, kind = observation / hypothesis /
   decision / note / question, title, body Markdown, evidence label, source, status, occurred_at
   UTC, author, soft delete), audited through the change log. Evidence labels as a managed list (D1).
   Accept: migration upgrades and downgrades cleanly; creating and editing an entry writes change-log rows.
-- [ ] **1.2 Entry service.** Create, edit, soft-delete, restore, and a timeline per project
+- [x] **1.2 Entry service.** Create, edit, soft-delete, restore, and a timeline per project
   (newest first, filter by kind). Hypotheses default to `Untested`, questions to `Open`.
   Accept: unit tests for each operation, including "edit keeps the old text in history".
-- [ ] **1.3 Safe Markdown.** Render entry bodies with markdown-it-py, cleaned with nh3.
+- [x] **1.3 Safe Markdown.** Render entry bodies with markdown-it-py, cleaned with nh3.
   Accept: tests show `<script>`, `onerror=` and `javascript:` links are stripped (N9).
-- [ ] **1.4 Notebook on the project page.** Entry timeline with kind and evidence badges, a quick-add
+- [x] **1.4 Notebook on the project page.** Entry timeline with kind and evidence badges, a quick-add
   bar (htmx, no page reload), a full edit page, and a History link per entry. Wire htmx into `base.html`.
   Accept: web tests add, edit and delete an entry through the routes; the page escapes user text.
-- [ ] **1.5 Hypotheses and questions (M3).** Status changes (Untested, Testing, Supported, Rejected;
+- [x] **1.5 Hypotheses and questions (M3).** Status changes (Untested, Testing, Supported, Rejected;
   questions Open/Answered) from the timeline, each logged. A filter for open hypotheses and questions.
   Accept: a status change appears in History with before and after.
-- [ ] **1.6 Tasks (M5).** Migration `0004`: `tasks` (project, text, done, due date optional, order,
+- [x] **1.6 Tasks (M5).** Migration `0004`: `tasks` (project, text, done, due date optional, order,
   author, soft delete). A checklist on the project page: add, tick, reorder, delete.
   Accept: service and web tests; ticking a task is logged.
-- [ ] **1.7 Faults (M4).** Migration `0005`: `faults` (project, symptom, status Open / Investigating /
+- [x] **1.7 Faults (M4).** Migration `0005`: `faults` (project, symptom, status Open / Investigating /
   Resolved, evidence label, next test, resolution, author, soft delete). Faults section with its own
   edit page. Accept: service and web tests; resolving requires a resolution text.
-- [ ] **1.8 Dashboard (M15 partial).** Replace the placeholder: active projects, recent entries,
+- [x] **1.8 Dashboard (M15 partial).** Replace the placeholder: active projects, recent entries,
   open faults, next tasks. Accept: web test with seeded data shows each tile.
-- [ ] **1.9 Release prep.** Update CHANGELOG, README feature list, and the design's screens table status.
+- [x] **1.9 Release prep.** Update CHANGELOG, README feature list, and the design's screens table status.
   Accept: `uv run pytest`, `ruff check`, `ruff format --check` all green. Then STOP.
 - [ ] 🧑 **1.10** Review, push, PR, merge, tag `v0.1.0`, screenshots for the README.
 

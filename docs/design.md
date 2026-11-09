@@ -136,24 +136,24 @@ The values above are illustrative; the field list follows Requirements v1.0. Not
 
 The dark bench look and sidebar layout from the original prototype stay. Big forms move out of pop-ups onto full pages, and the run page with its chart becomes the centerpiece.
 
-| Screen | Purpose | Key elements | Requirements | Iteration |
-| --- | --- | --- | --- | --- |
-| Dashboard | What's happening on the bench | Active projects, recent runs, open faults, next tasks, backup status per destination | M15, B7 | 1, 3 |
-| Projects list | Find a project | Cards with stage and area, search, filter by stage | M1 | 1 |
-| Project: Notebook | The living record | Editable project fields; entry timeline (observations, hypotheses, decisions, notes, questions) with evidence labels; quick-add bar | M1, M2, M3 | 1 |
-| Project: Runs | Runs for this project | Table with date, title, instruments, status, data badge | M7 | 2 |
-| Project: Faults & tasks | What's broken and what's next | Fault tracker, next-step checklist | M4, M5 | 1, 5 |
-| Project: Files | Photos, screenshots, references | Gallery, file list with checksums | M12 | 6 |
-| History view | What changed and when | Any record's change log, with before/after per field | M2 | 1 |
-| Import | Bring in a run package | Upload, then a preview (metadata, channels, row count, gaps found, checksum, duplicate warning), then confirm | M8, R1–R5 | 2 |
-| Run page | One session, fully described | Metadata and instrument settings; multi-channel chart with zoom and event markers; stats for the selected window; summary measurements; checklist; files | M7, M9, M10, M11 | 2, 4 |
-| Run compare | Overlay runs | Pick runs and channels, align by elapsed or clock time | S2 | 1.x |
-| Instruments list | The equipment register | Table with status, interface and address | M6 | 5 |
-| Instrument page | One instrument's story | Details plus a dated event log (self-tests, faults, calibration checks) | M6, S6 | 5 |
-| Templates | Reusable procedures | List, editor, "start run from template" | M13 | 6 |
-| Reports | Write-ups | Pick a project or run, generate Markdown, edit, download | M14 | 6 |
-| Search | Find anything | Results grouped by type | M15 | 6 |
-| Settings & backups | Keep data safe | Backup status and history, export, restore instructions | M16, B1–B8 | 3 |
+| Screen | Purpose | Key elements | Requirements | Iteration | Status |
+| --- | --- | --- | --- | --- | --- |
+| Dashboard | What's happening on the bench | Active projects, recent runs, open faults, next tasks, backup status per destination | M15, B7 | 1, 3 | Partial in v0.1.0: active projects, recent entries, open faults, next tasks. Recent runs (2) and backups (3) to come |
+| Projects list | Find a project | Cards with stage and area, search, filter by stage | M1 | 1 | Done in v0.1.0, except search (arrives with Search) |
+| Project: Notebook | The living record | Editable project fields; entry timeline (observations, hypotheses, decisions, notes, questions) with evidence labels; quick-add bar | M1, M2, M3 | 1 | Done in v0.1.0 |
+| Project: Runs | Runs for this project | Table with date, title, instruments, status, data badge | M7 | 2 | Planned |
+| Project: Faults & tasks | What's broken and what's next | Fault tracker, next-step checklist | M4, M5 | 1, 5 | Iteration 1 part done in v0.1.0 |
+| Project: Files | Photos, screenshots, references | Gallery, file list with checksums | M12 | 6 | Planned |
+| History view | What changed and when | Any record's change log, with before/after per field | M2 | 1 | Done in v0.1.0 (projects, entries, tasks, faults, list items) |
+| Import | Bring in a run package | Upload, then a preview (metadata, channels, row count, gaps found, checksum, duplicate warning), then confirm | M8, R1–R5 | 2 | Planned |
+| Run page | One session, fully described | Metadata and instrument settings; multi-channel chart with zoom and event markers; stats for the selected window; summary measurements; checklist; files | M7, M9, M10, M11 | 2, 4 | Planned |
+| Run compare | Overlay runs | Pick runs and channels, align by elapsed or clock time | S2 | 1.x | Planned |
+| Instruments list | The equipment register | Table with status, interface and address | M6 | 5 | Planned |
+| Instrument page | One instrument's story | Details plus a dated event log (self-tests, faults, calibration checks) | M6, S6 | 5 | Planned |
+| Templates | Reusable procedures | List, editor, "start run from template" | M13 | 6 | Planned |
+| Reports | Write-ups | Pick a project or run, generate Markdown, edit, download | M14 | 6 | Planned |
+| Search | Find anything | Results grouped by type | M15 | 6 | Planned |
+| Settings & backups | Keep data safe | Backup status and history, export, restore instructions | M16, B1–B8 | 3 | Planned. Settings → Lists (areas, evidence labels) done in v0.1.0 |
 
 ## Repository layout and dev workflow
 

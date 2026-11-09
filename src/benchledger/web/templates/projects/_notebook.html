@@ -1,0 +1,133 @@
+{#- The notebook on the project page (M2). Rendered inside detail.html, and on its own as
+    the htmx response after a change: quick-add swaps the whole notebook, while status,
+    delete and restore keep only its #timeline part (hx-select). Everything the user
+    typed is auto-escaped; the body goes through the |markdown filter (N9). -#}
+{%- macro view_fields() -%}
+<input type="hidden" name="view_kind" value="{{ kind }}"><input type="hidden" name="view_deleted" value="{{ '1' if show_deleted else '' }}">
+{%- endmacro %}
+<section class="panel notebook" id="notebook">
+  <div class="notebook-head">
+    <h2>Notebook</h2>
+    <nav class="filters" aria-label="Filter entries by kind">
+      <a href="/projects/{{ project.slug }}#notebook" class="chip {% if not kind and not show_deleted %}on{% endif %}">All</a>
+      <a href="/projects/{{ project.slug }}?kind={{ open_filter }}#notebook" class="chip {% if kind == open_filter %}on{% endif %}">Open hypotheses &amp; questions</a>
+      {% for k in kinds %}
+      <a href="/projects/{{ project.slug }}?kind={{ k }}#notebook" class="chip {% if kind == k %}on{% endif %}">{{ plurals[k] }}</a>
+      {% endfor %}
+      <a href="/projects/{{ project.slug }}?deleted=1#notebook" class="chip {% if show_deleted %}on{% endif %}">Show deleted</a>
+    </nav>
+  </div>
+
+  <form class="quick-add" method="post" action="/projects/{{ project.slug }}/entries"
+        hx-post="/projects/{{ project.slug }}/entries" hx-target="#notebook" hx-swap="outerHTML">
+    {{ view_fields() }}
+    {% if errors %}<p class="error-summary">Not added: please fix the highlighted fields.</p>{% endif %}
+    <div class="quick-row">
+      <label class="field">
+        <span>Kind</span>
+        <select name="kind">
+          {% for k in kinds %}
+          <option value="{{ k }}" {% if values.get('kind') == k %}selected{% endif %}>{{ k | capitalize }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.get('kind') %}<em class="error">{{ errors.get('kind') }}</em>{% endif %}
+      </label>
+      <label class="field grow">
+        <span>Title</span>
+        <input name="title" value="{{ values.get('title', '') }}" maxlength="200" required
+               placeholder="What happened, what you think, or what you decided">
+        {% if errors.get('title') %}<em class="error">{{ errors.get('title') }}</em>{% endif %}
+      </label>
+      <label class="field">
+        <span>Evidence</span>
+        <select name="evidence_label_id">
+          <option value="">— none —</option>
+          {% for label in labels %}
+          <option value="{{ label.id }}" {% if values.get('evidence_label_id') == label.id | string %}selected{% endif %}>{{ label.name }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.get('evidence_label_id') %}<em class="error">{{ errors.get('evidence_label_id') }}</em>{% endif %}
+      </label>
+      <button class="btn primary" type="submit">Add</button>
+    </div>
+    <details class="more" {% if errors.get('body') or errors.get('source') or errors.get('occurred_at') or values.get('body') or values.get('source') or values.get('occurred_at') %}open{% endif %}>
+      <summary>Details, source and time</summary>
+      <label class="field">
+        <span>Details <small class="muted">Markdown</small></span>
+        <textarea name="body" rows="4">{{ values.get('body', '') }}</textarea>
+        {% if errors.get('body') %}<em class="error">{{ errors.get('body') }}</em>{% endif %}
+      </label>
+      <div class="row">
+        <label class="field grow">
+          <span>Source <small class="muted">instrument, run, datasheet, page…</small></span>
+          <input name="source" value="{{ values.get('source', '') }}" maxlength="300">
+          {% if errors.get('source') %}<em class="error">{{ errors.get('source') }}</em>{% endif %}
+        </label>
+        <label class="field">
+          <span>When <small class="muted">blank = now</small></span>
+          <input type="datetime-local" name="occurred_at" value="{{ values.get('occurred_at', '') }}">
+          {% if errors.get('occurred_at') %}<em class="error">{{ errors.get('occurred_at') }}</em>{% endif %}
+        </label>
+      </div>
+    </details>
+  </form>
+
+  {#- Per-entry actions (status, delete, restore) replace only this part, so a half-typed
+      quick-add draft above survives. -#}
+  <div id="timeline">
+  {% if entries %}
+  <ol class="timeline">
+    {% for e in entries %}
+    <li class="entry kind-{{ e.kind }}{% if e.deleted_at %} deleted{% endif %}" id="entry-{{ e.id }}">
+      <div class="entry-top">
+        <span class="badge kind kind-{{ e.kind }}">{{ e.kind }}</span>
+        {% if e.status and (e.deleted_at or e.kind not in statuses) %}<span class="badge status status-{{ e.status | lower }}">{{ e.status }}</span>{% endif %}
+        {% if e.kind in statuses and not e.deleted_at %}
+        <form class="status-form" method="post" action="/projects/{{ project.slug }}/entries/{{ e.id }}/status"
+              hx-post="/projects/{{ project.slug }}/entries/{{ e.id }}/status" hx-target="#timeline" hx-select="#timeline" hx-swap="outerHTML">
+          {{ view_fields() }}
+          {# Saved only with Set: saving on "change" would log every status an arrow key passes. #}
+          <select name="status" id="status-{{ e.id }}" class="badge status status-{{ e.status | lower }}" aria-label="Status of {{ e.title }}">
+            {% for s in statuses[e.kind] %}
+            <option value="{{ s }}" {% if e.status == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn small" type="submit">Set</button>
+        </form>
+        {% endif %}
+        {% if e.evidence_label %}<span class="badge evidence">{{ e.evidence_label.name }}</span>{% endif %}
+        {% if e.deleted_at %}<span class="badge muted">Deleted</span>{% endif %}
+        <time class="when mono" datetime="{{ e.occurred_at | isotime }}"
+              title="{{ e.occurred_at | utctime }} · entered at {{ e.occurred_offset_min | utcoffset }}">{{ e.occurred_at | localtime }}</time>
+      </div>
+      <h3>{{ e.title }}</h3>
+      {% if e.body %}<div class="md">{{ e.body | markdown }}</div>{% endif %}
+      {% if e.source %}<p class="source muted">Source: {{ e.source }}</p>{% endif %}
+      <div class="entry-actions">
+        {% if e.deleted_at %}
+        <form method="post" action="/projects/{{ project.slug }}/entries/{{ e.id }}/restore"
+              hx-post="/projects/{{ project.slug }}/entries/{{ e.id }}/restore" hx-target="#timeline" hx-select="#timeline" hx-swap="outerHTML">
+          {{ view_fields() }}
+          <button class="btn small" type="submit">Restore</button>
+        </form>
+        {% else %}
+        <a class="btn small" href="/projects/{{ project.slug }}/entries/{{ e.id }}/edit">Edit</a>
+        <form method="post" action="/projects/{{ project.slug }}/entries/{{ e.id }}/delete"
+              hx-post="/projects/{{ project.slug }}/entries/{{ e.id }}/delete" hx-target="#timeline" hx-select="#timeline" hx-swap="outerHTML"
+              hx-confirm="Delete this entry? It can be restored from Show deleted.">
+          {{ view_fields() }}
+          <button class="btn small" type="submit">Delete</button>
+        </form>
+        {% endif %}
+        <a class="small-link muted" href="/history/entries/{{ e.id }}">History</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="muted empty-note">
+    {% if kind == open_filter %}No open hypotheses or questions.{% elif kind %}No {{ plurals[kind] | lower }} yet.{% elif show_deleted %}No entries.{% else %}No entries yet. Add the first observation above.{% endif %}
+  </p>
+  {% endif %}
+  </div>
+</section>

@@ -1,0 +1,59 @@
+{#- Next-step checklist on the project page (M5). Rendered inside detail.html, and on its
+    own as the htmx response after a change. User text is auto-escaped (N9). -#}
+<section class="panel tasks" id="tasks">
+  <h2>Next steps</h2>
+  {% set open_tasks = tasks | rejectattr("done") | list %}
+  {% if tasks %}
+  <ul class="checklist">
+    {% for t in tasks %}
+    <li class="task{% if t.done %} done{% endif %}{% if t.id in overdue %} overdue{% endif %}" id="task-{{ t.id }}">
+      <form class="inline" method="post" action="/projects/{{ project.slug }}/tasks/{{ t.id }}/done"
+            hx-post="/projects/{{ project.slug }}/tasks/{{ t.id }}/done" hx-target="#tasks" hx-swap="outerHTML">
+        <input type="hidden" name="done" value="{{ '' if t.done else '1' }}">
+        <button class="tick" type="submit" aria-pressed="{{ 'true' if t.done else 'false' }}"
+                aria-label="Done: {{ t.text }}">{{ "✓" if t.done else "" }}</button>
+      </form>
+      <span class="task-text">{{ t.text }}</span>
+      {% if t.due_on %}<span class="badge due mono" title="Due date">{{ "overdue · " if t.id in overdue }}{{ t.due_on.isoformat() }}</span>{% endif %}
+      <span class="task-actions">
+        {% if not t.done %}
+        <form class="inline" method="post" action="/projects/{{ project.slug }}/tasks/{{ t.id }}/move"
+              hx-post="/projects/{{ project.slug }}/tasks/{{ t.id }}/move" hx-target="#tasks" hx-swap="outerHTML">
+          {% if t != open_tasks[0] %}<button class="btn small" name="direction" value="up" aria-label="Move up: {{ t.text }}">↑</button>{% endif %}
+          {% if t != open_tasks[-1] %}<button class="btn small" name="direction" value="down" aria-label="Move down: {{ t.text }}">↓</button>{% endif %}
+        </form>
+        {% endif %}
+        <form class="inline" method="post" action="/projects/{{ project.slug }}/tasks/{{ t.id }}/delete"
+              hx-post="/projects/{{ project.slug }}/tasks/{{ t.id }}/delete" hx-target="#tasks" hx-swap="outerHTML"
+              hx-confirm="Delete this task?">
+          <button class="btn small" type="submit" aria-label="Delete: {{ t.text }}">✕</button>
+        </form>
+        <a class="small-link muted" href="/history/tasks/{{ t.id }}">History</a>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted empty-note">No tasks yet. What's the next thing to try?</p>
+  {% endif %}
+
+  <form class="inline add-row task-add" method="post" action="/projects/{{ project.slug }}/tasks"
+        hx-post="/projects/{{ project.slug }}/tasks" hx-target="#tasks" hx-swap="outerHTML">
+    <input name="text" placeholder="Next step" maxlength="300" required aria-label="New task"
+           value="{{ task_values.get('text', '') }}">
+    {#- A date field throws away a value that isn't ISO, which would blank out a rejected
+        typed date. After a date error, show a text box with what was typed so it can be
+        corrected; otherwise use the date picker. -#}
+    {% if task_errors.get('due_on') %}
+    <input type="text" name="due_on" aria-label="Due date (optional)" aria-invalid="true"
+           aria-describedby="due-on-error" placeholder="YYYY-MM-DD" maxlength="40"
+           value="{{ task_values.get('due_on', '') }}">
+    {% else %}
+    <input type="date" name="due_on" aria-label="Due date (optional)" min="1900-01-01" max="2200-12-31"
+           value="{{ task_values.get('due_on', '') }}">
+    {% endif %}
+    <button class="btn primary small" type="submit">Add</button>
+  </form>
+  {% if task_errors.get('text') %}<em class="error">{{ task_errors.get('text') }}</em>{% endif %}
+  {% if task_errors.get('due_on') %}<em class="error" id="due-on-error">{{ task_errors.get('due_on') }}</em>{% endif %}
+</section>
