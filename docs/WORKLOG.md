@@ -426,3 +426,43 @@ TestClient deprecation as before). `ruff check` passed; `ruff format --check` pa
   and checklist order, so older projects come first when there are more than 8.
 - **Not in this item:** "recent runs" (iteration 2) and backup status (iteration 3) are
   left for their iterations, as the design's Screens table says.
+
+## 2026-11-08 · 1.9 Release prep (v0.1.0)
+
+**Files changed**
+- `CHANGELOG.md`: the iteration-1 work moves from [Unreleased] into a new `[0.1.0] -
+  2026-11-08` section (Added, Fixed); an empty [Unreleased] is kept.
+- `README.md`: status line and a Features section.
+- `docs/design.md`: a Status column on the Screens table. Nothing else in the file
+  changed (checked with `git diff`: 18 table rows only).
+- `src/benchledger/__init__.py`: `__version__` 0.0.1 → 0.1.0.
+
+**Reviewer findings**
+- High: none.
+- Medium: none.
+- Low, fixed:
+  - README overclaimed "what was believed on any date can be recovered" (there's no
+    as-of view); reworded to per-record History.
+  - "User text is always escaped" was inexact: bodies are sanitized Markdown.
+  - The dashboard line said "non-archived" for projects; it shows Active-stage projects.
+  - "Changed" renamed to "Fixed": these fixes were to code that never shipped.
+  - The "Faults & tasks" status now says only the iteration-1 part is done.
+  - README mentions Settings → Lists.
+- Low, not changed: Keep a Changelog compare links. 0.0.1 never had them, and they'd only
+  resolve after the owner tags v0.1.0.
+
+**Tester:** pytest 211 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+**Extra check:** through the real CLI, in a scratch data folder, `benchledger db upgrade`
+reaches `0005`, `alembic downgrade base` empties it ("not migrated"), and upgrading again
+reaches `0005`. `benchledger version` prints 0.1.0.
+
+**Judgment calls**
+- **Version bump:** not named in the item. `pyproject.toml` reads the version from
+  `__init__.py`, so without the bump a v0.1.0 tag would build and report 0.0.1.
+- **CHANGELOG date:** 2026-11-08, the day the work was finished. Change it if the tag
+  lands on a different day.
+
+**Milestone 1 stops here.** Next is 🧑 1.10: review, push, PR, merge, tag `v0.1.0`, and
+README screenshots.

@@ -57,7 +57,7 @@ Branch: `feat/iter1-notebook` from `main`.
   edit page. Accept: service and web tests; resolving requires a resolution text.
 - [x] **1.8 Dashboard (M15 partial).** Replace the placeholder: active projects, recent entries,
   open faults, next tasks. Accept: web test with seeded data shows each tile.
-- [ ] **1.9 Release prep.** Update CHANGELOG, README feature list, and the design's screens table status.
+- [x] **1.9 Release prep.** Update CHANGELOG, README feature list, and the design's screens table status.
   Accept: `uv run pytest`, `ruff check`, `ruff format --check` all green. Then STOP.
 - [ ] 🧑 **1.10** Review, push, PR, merge, tag `v0.1.0`, screenshots for the README.
 
