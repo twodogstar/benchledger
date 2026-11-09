@@ -1,13 +1,13 @@
 """Project pages: list, create, view, edit, archive (requirement M1)."""
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from benchledger.services import InvalidInput
 from benchledger.services import areas as area_service
 from benchledger.services import projects as project_service
 from benchledger.web.deps import SessionDep, form_data, redirect, templates
-from benchledger.web.routes.entries import notebook_context
+from benchledger.web.project_page import project_or_404, project_page_context
 
 router = APIRouter(prefix="/projects")
 
@@ -31,13 +31,6 @@ def _form_page(request: Request, session, *, project, values, errors, status_cod
         },
         status_code=status_code,
     )
-
-
-def _project_or_404(session, slug: str):
-    project = project_service.get_project(session, slug)
-    if project is None:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return project
 
 
 @router.get("", response_class=HTMLResponse)
@@ -83,15 +76,14 @@ async def create_project(request: Request, session: SessionDep):
 def project_detail(
     request: Request, session: SessionDep, slug: str, kind: str = "", deleted: bool = False
 ):
-    project = _project_or_404(session, slug)
-    context = notebook_context(session, project, kind=kind, show_deleted=deleted)
-    context["active"] = "projects"
+    project = project_or_404(session, slug)
+    context = project_page_context(session, project, kind=kind, show_deleted=deleted)
     return templates.TemplateResponse(request, "projects/detail.html", context)
 
 
 @router.get("/{slug}/edit", response_class=HTMLResponse)
 def edit_project_form(request: Request, session: SessionDep, slug: str):
-    project = _project_or_404(session, slug)
+    project = project_or_404(session, slug)
     values = {field: getattr(project, field) for field in project_service.FORM_FIELDS}
     values["area_id"] = str(project.area_id or "")
     return _form_page(request, session, project=project, values=values, errors={})
@@ -99,7 +91,7 @@ def edit_project_form(request: Request, session: SessionDep, slug: str):
 
 @router.post("/{slug}/edit")
 async def update_project(request: Request, session: SessionDep, slug: str):
-    project = _project_or_404(session, slug)
+    project = project_or_404(session, slug)
     data = await form_data(request, project_service.FORM_FIELDS)
     try:
         project_service.update_project(session, project, data)
@@ -114,7 +106,7 @@ async def update_project(request: Request, session: SessionDep, slug: str):
 
 @router.post("/{slug}/archive")
 def archive_project(session: SessionDep, slug: str):
-    project = _project_or_404(session, slug)
+    project = project_or_404(session, slug)
     project_service.archive_project(session, project)
     session.commit()
     return redirect(f"/projects/{project.slug}")
@@ -122,7 +114,7 @@ def archive_project(session: SessionDep, slug: str):
 
 @router.post("/{slug}/restore")
 def restore_project(session: SessionDep, slug: str):
-    project = _project_or_404(session, slug)
+    project = project_or_404(session, slug)
     project_service.restore_project(session, project)
     session.commit()
     return redirect(f"/projects/{project.slug}")

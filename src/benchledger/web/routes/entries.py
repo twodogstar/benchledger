@@ -10,29 +10,23 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from benchledger import timeutil
-from benchledger.db.models import EvidenceLabel
 from benchledger.services import InvalidInput
 from benchledger.services import entries as entry_service
-from benchledger.services import lists as list_service
-from benchledger.services import projects as project_service
 from benchledger.web.deps import RecordId, SessionDep, form_data, redirect, templates
+from benchledger.web.project_page import (
+    is_htmx,
+    label_choices,
+    notebook_context,
+    project_or_404,
+    project_page_context,
+    valid_filter,
+)
 
 router = APIRouter(prefix="/projects/{slug}/entries")
 
 # Hidden fields on the notebook's forms that say which view the user is on (kind filter,
 # show deleted), so adding or deleting an entry doesn't reset it.
 VIEW_FIELDS = ["view_kind", "view_deleted"]
-
-
-def is_htmx(request: Request) -> bool:
-    return request.headers.get("HX-Request") == "true"
-
-
-def project_or_404(session, slug: str):
-    project = project_service.get_project(session, slug)
-    if project is None:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return project
 
 
 def entry_or_404(session, project, entry_id: int):
@@ -42,53 +36,10 @@ def entry_or_404(session, project, entry_id: int):
     return entry
 
 
-def label_choices(session, current_id: int | None = None) -> list:
-    """Active evidence labels, plus a retired one already on the entry being edited."""
-    labels = list_service.list_items(session, EvidenceLabel)
-    if current_id is not None and all(label.id != current_id for label in labels):
-        current = session.get(EvidenceLabel, current_id)
-        if current is not None:
-            labels.append(current)
-    return labels
-
-
-def notebook_context(
-    session,
-    project,
-    *,
-    kind: str = "",
-    show_deleted: bool = False,
-    values: dict | None = None,
-    errors: dict | None = None,
-) -> dict:
-    """Everything the notebook fragment (projects/_notebook.html) needs."""
-    kind = valid_filter(kind)
-    return {
-        "project": project,
-        "entries": entry_service.timeline(
-            session, project, kind=kind or None, include_deleted=show_deleted
-        ),
-        "kinds": entry_service.KINDS,
-        "plurals": entry_service.PLURALS,
-        "statuses": entry_service.STATUSES,
-        "open_filter": entry_service.OPEN_FILTER,
-        "kind": kind,
-        "show_deleted": show_deleted,
-        "labels": label_choices(session),
-        "values": values or {"kind": "observation"},
-        "errors": errors or {},
-    }
-
-
 def _notebook_response(request: Request, context: dict, status_code: int = 200):
     return templates.TemplateResponse(
         request, "projects/_notebook.html", context, status_code=status_code
     )
-
-
-def valid_filter(kind: str) -> str:
-    """A kind filter from the URL or a form, or '' (show all) if it isn't one we know."""
-    return kind if kind in entry_service.KINDS or kind == entry_service.OPEN_FILTER else ""
 
 
 def _view(data: dict[str, str]) -> tuple[str, bool]:
@@ -129,18 +80,20 @@ async def create_entry(request: Request, session: SessionDep, slug: str):
     except InvalidInput as exc:
         session.rollback()
         kind, show_deleted = _view(data)
-        context = notebook_context(
-            session,
-            project,
-            kind=kind,
-            show_deleted=show_deleted,
-            values=data,
-            errors=exc.errors,
-        )
         if is_htmx(request):
             # htmx only swaps 2xx responses by default; the errors are in the fragment.
+            context = notebook_context(
+                session,
+                project,
+                kind=kind,
+                show_deleted=show_deleted,
+                values=data,
+                errors=exc.errors,
+            )
             return _notebook_response(request, context)
-        context["active"] = "projects"
+        context = project_page_context(
+            session, project, kind=kind, show_deleted=show_deleted, values=data, errors=exc.errors
+        )
         return templates.TemplateResponse(request, "projects/detail.html", context, status_code=400)
     session.commit()
     return _after_change(request, session, project, data)

@@ -11,6 +11,7 @@ from benchledger.db.models import ChangeLog
 HISTORY_TABLES = {
     "projects": "Project",
     "entries": "Entry",
+    "tasks": "Task",
     "areas": "Area",
     "evidence_labels": "Evidence label",
 }

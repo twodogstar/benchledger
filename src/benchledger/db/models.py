@@ -6,6 +6,7 @@
   - projects:    one bench project and its living description (requirement M1)
   - evidence_labels: the editable list of evidence labels (decision D1)
   - entries:     dated notebook entries per project (requirements M2, M3)
+  - tasks:       next-step checklist per project (requirement M5)
 
 Models that inherit `Audited` have every insert, update and delete written to change_log
 automatically (see db/audit.py). Keep models in step with the Alembic migrations;
@@ -14,9 +15,20 @@ tests/test_db.py fails if they drift.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from benchledger.db.base import Base
@@ -161,3 +173,29 @@ class Entry(Base, Audited):
 
     project: Mapped[Project] = relationship()
     evidence_label: Mapped[EvidenceLabel | None] = relationship()
+
+
+class Task(Base, Audited):
+    """A next-step task on a project's checklist (M5). Soft-deleted like entries."""
+
+    __tablename__ = "tasks"
+    __table_args__ = (Index("ix_tasks_project", "project_id", "done", "position"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))
+    text: Mapped[str] = mapped_column(String(300))
+    done: Mapped[bool] = mapped_column(Boolean, default=False)
+    due_on: Mapped[date | None] = mapped_column(Date)  # a calendar day; no time or zone
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), default=OWNER_ID)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    project: Mapped[Project] = relationship()

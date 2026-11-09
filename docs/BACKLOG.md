@@ -49,7 +49,7 @@ Branch: `feat/iter1-notebook` from `main`.
 - [x] **1.5 Hypotheses and questions (M3).** Status changes (Untested, Testing, Supported, Rejected;
   questions Open/Answered) from the timeline, each logged. A filter for open hypotheses and questions.
   Accept: a status change appears in History with before and after.
-- [ ] **1.6 Tasks (M5).** Migration `0004`: `tasks` (project, text, done, due date optional, order,
+- [x] **1.6 Tasks (M5).** Migration `0004`: `tasks` (project, text, done, due date optional, order,
   author, soft delete). A checklist on the project page: add, tick, reorder, delete.
   Accept: service and web tests; ticking a task is logged.
 - [ ] **1.7 Faults (M4).** Migration `0005`: `faults` (project, symptom, status Open / Investigating /

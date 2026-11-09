@@ -263,3 +263,56 @@ TestClient deprecation as before). `ruff check` passed; `ruff format --check` pa
   are Open.
 - **Status on the edit page:** it isn't editable there. It changes only from the timeline,
   so each change is a single deliberate step in History.
+
+## 2026-11-08 · 1.6 Tasks (M5)
+
+**Files changed**
+- `src/benchledger/migrations/versions/0004_tasks.py`: new; creates `tasks`, downgrade
+  drops it.
+- `src/benchledger/db/models.py`: `Task` model.
+- `src/benchledger/services/tasks.py`: new. Checklist (open first, then done), create
+  with an optional due date, toggle done, move, soft delete, `is_overdue`.
+- `src/benchledger/web/routes/tasks.py`: new. Add, done, move and delete routes; htmx
+  gets the fragment, plain forms get a redirect.
+- `src/benchledger/web/templates/projects/_tasks.html`: new "Next steps" panel.
+- `src/benchledger/web/project_page.py`: new. Shared project-page contexts and helpers,
+  moved out of `routes/entries.py` so the entry and task route modules don't import each
+  other.
+- `src/benchledger/web/routes/entries.py`, `routes/projects.py`: use `project_page`.
+  `projects.py` drops its duplicate `_project_or_404`.
+- `src/benchledger/web/routes/history.py`, `services/history.py`,
+  `templates/history.html`: tasks in History. `_describe()` builds each record's label
+  and back link in one place, replacing per-table template branches.
+- `src/benchledger/app.py`, `templates/projects/detail.html`,
+  `static/css/benchledger.css`: router, include and styles.
+- `tests/test_tasks.py`: new.
+
+**Reviewer findings**
+- High: none.
+- Medium: none.
+- Low, fixed:
+  - Moving a task renumbered every open task, adding spurious History rows. Now only
+    the two tasks that swap are written, unless their positions tie.
+  - A bad or missing `done` value was treated as "untick". Anything other than `1` or
+    empty now gets a 400.
+  - The tick button combined `aria-pressed` with an action label; it now has a fixed
+    label ("Done: …").
+  - Migration server defaults differ from the model's Python defaults; explained in a
+    comment.
+  - The duplicate `_project_or_404` was removed.
+  - Type hints added on `task_or_404`.
+- Low, not changed:
+  - With JavaScript off, delete has no confirm. It's a soft delete and is logged.
+  - Focus is lost after the `#tasks` swap. Optional, left for now.
+
+**Tester:** pytest 183 passed, 0 failed, 0 errors, 0 skipped, 1 warning (the same Starlette
+TestClient deprecation as before). `ruff check` passed; `ruff format --check` passed.
+
+**Judgment calls**
+- **No task restore button:** the item asks for add, tick, reorder and delete. Deleted
+  tasks stay in the database and History.
+- **Due date:** a plain calendar date with no time zone. "Overdue" compares it with
+  today's local date.
+- **No editing task text:** not in the item. Delete and re-add instead.
+- **Checklist placement:** shown above the notebook so next steps are visible without
+  scrolling past the timeline.
